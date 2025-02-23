@@ -43,34 +43,50 @@ pub fn optimize(&self, mut expr: RecExpr) -> RecExpr {
     }
 
     // Print initial expression and cost
-    println!("[Initial] Expression: {:?}", expr);
-    println!("[Initial] Cost: {}", cost);
+    println!("Initial Expression: {:?}\n", expr);
+    println!("Initial Cost: {}\n", cost);
     println!("");
 
     // 1. pushdown apply
+    println!("Stage 1: Pushdown Apply\n");
+    for (i, rule) in STAGE1_RULES.iter().enumerate() {
+        println!("  Regra {}: {:?}\n", i + 1, rule);
+    }
     self.optimize_stage(&mut expr, &mut cost, STAGE1_RULES.iter(), 2, 6);
-    println!("[After Stage 1] Expression: {:?}", expr);
-    println!("[After Stage 1] Cost: {}", cost);
+    println!("After Stage 1: \n");
+    println!("  Expression: {:?}", expr);
+    println!("  Cost: {}", cost);
     println!("");
 
     // 2. pushdown predicate and projection
+    println!("Stage 2: Pushdown Predicate and Projection\n");
+    for (i, rule) in STAGE2_RULES.iter().enumerate() {
+        println!("  Regra {}: {:?}\n", i + 1, rule);
+    }
     let rules = STAGE2_RULES.iter().chain(&extra_rules);
     self.optimize_stage(&mut expr, &mut cost, rules, 4, 6);
-    println!("[After Stage 2] Expression: {:?}", expr);
-    println!("[After Stage 2] Cost: {}", cost);
+    println!("After Stage 2: \n");
+    println!("  Expression: {:?}", expr);
+    println!("  Cost: {}", cost);
     println!("");
+    
 
     // 3. join reorder and hashjoin
+    println!("Stage 3: Join Reorder and HashJoin\n");
+    for (i, rule) in STAGE3_RULES.iter().enumerate() {
+        println!("  Regra {}: {:?}\n", i + 1, rule);
+    }
     self.optimize_stage(&mut expr, &mut cost, STAGE3_RULES.iter(), 3, 8);
-    println!("[After Stage 3] Expression: {:?}", expr);
-    println!("[After Stage 3] Cost: {}", cost);
+    println!("After Stage 3: \n");
+    println!("  Expression: {:?}", expr);
+    println!("  Cost: {}", cost);
     println!("");
+    
 
     // Print final expression and cost
-    println!("[Final] Expression: {:?}", expr);
-    println!("[Final] Cost: {}", cost);
+    println!("Final Expression: {:?}\n", expr);
+    println!("Final Cost: {}\n", cost);
     println!("");
-
     expr
 }
     /// Optimize the expression with the given rules in multiple iterations.
