@@ -2,8 +2,8 @@
 
 -- Análise de Optimizadores SQL -- 
 
-Conseguimos inserir prints para ver quantos grupos de expressões equivalentes existem e quantas expressões existem dentro desses grupos.
-
+- Conseguimos inserir prints para ver quantos grupos de expressões equivalentes existem e quantas expressões existem dentro desses grupos.
+- Conseguimos inserir prints para distinguir entre expressões relacionais e outras.
 ----------------------------------
 
 
