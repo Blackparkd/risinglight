@@ -1,5 +1,13 @@
 # RisingLight
 
+-- Análise de Optimizadores SQL -- 
+
+Conseguimos inserir prints para ver quantos grupos de expressões equivalentes existem e quantas expressões existem dentro desses grupos.
+
+----------------------------------
+
+
+
 [![CI](https://github.com/risinglightdb/risinglight/workflows/CI/badge.svg?branch=main)](https://github.com/risinglightdb/risinglight/actions)
 [![RisingLight on dbdb.io](https://img.shields.io/badge/dbdb.io-RisingLight-blue)](https://dbdb.io/db/risinglight)
 [![crates.io](https://img.shields.io/crates/v/risinglight.svg)](https://crates.io/crates/risinglight)
