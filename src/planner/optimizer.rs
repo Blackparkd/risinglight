@@ -1,5 +1,10 @@
 // Copyright 2024 RisingLight Project Authors. Licensed under Apache-2.0.
 
+// Cada Classe de Equivalência é uma lista de expressões equivalentes
+// Cada expressão é um nó no E-Graph e é equivalente a todas as outras expressões na mesma classe
+// Temos prints para exibir o número de classes de equivalência e o número de expressões equivalentes em cada classe
+// Faz-se várias iterações para otimizar a expressão, em cada iteração são aplicadas reescritas de regras
+
 use std::sync::LazyLock;
 use egg::Language;
 use egg::CostFunction;
@@ -50,40 +55,24 @@ fn format_enode(enode: &Expr) -> String {
     }
 }
 
-fn print_expr_tree(expr: &RecExpr, node_id: Id, indent: usize) {
-    let node = &expr.as_ref()[usize::from(node_id)];
-
-    // Exibe o nó atual com indentação
-    println!("{:indent$}{}: {}", "", node_id, format_enode(node), indent = indent * 2);
-
-    // Recursivamente exibe os filhos do nó
-    for &child in node.children() {
-        print_expr_tree(expr, child, indent + 1);
-    }
-}
-
-fn visit_and_enumerate_alternatives(egraph: &EGraph) {
+// Função para visitar e enumerar as alternativas no E-Graph
+fn visit_and_enumerate_alternatives(egraph: &EGraph) -> usize {
     // Itera sobre todas as classes de equivalência no E-Graph
     
-    let mut classesEq = 0;
-    let mut numNodes = 0;
-
+    let mut classes_eq = 0;
+    let mut num_nodes = 0;
 
     for (class_id, eclass) in egraph.classes().enumerate() {
-        // println!("Classe de equivalência {}:", class_id);
-        classesEq += 1;
-
+        classes_eq += 1;
+        num_nodes = 0;
         // Itera sobre todos os nós na classe de equivalência
         for (node_id, enode) in eclass.nodes.iter().enumerate() {
-            numNodes += 1;
-            // Se o nó tiver filhos, você pode explorá-los também
-            //if !enode.children().is_empty() {
-                println!("\nNó Número {:?}    Nó Info: {:?}   Filhos: {:?}\n", node_id, enode, enode.children().len());
-           // }
+            num_nodes += 1;
+            //println!("\nNó Número {:?}    Nó Info: {:?}   Filhos: {:?}\n", node_id, enode, enode.children().len());
         }
-        println!("Número de nós: {}\n", numNodes);
+        println!("\nClasse {:?} Nº de Exprs Equivalentes: {:?}\n", class_id, num_nodes);
     }
-    println!("Número de classes de equivalência: {}\n", classesEq);
+    classes_eq
 }
 
 impl Optimizer {
@@ -107,24 +96,31 @@ impl Optimizer {
         }
 
         let root_id = Id::from(expr.as_ref().len() - 1);
-        
+
+        println!("\nCusto inicial: {}", cost);
+
         // 1. pushdown apply
+        println!("\n----------------------- Stage 1 ------------------------------\n");
         self.optimize_stage(&mut expr, &mut cost, STAGE1_RULES.iter(), 2, 6);
         let root_id = Id::from(expr.as_ref().len() - 1);
+        println!("Custo atual: {}", cost);
         
         // 2. pushdown predicate and projection
+        println!("\n----------------------- Stage 2 ------------------------------\n");
         let rules = STAGE2_RULES.iter().chain(&extra_rules);
         self.optimize_stage(&mut expr, &mut cost, rules, 4, 6);
         let root_id = Id::from(expr.as_ref().len() - 1);
+        println!("Custo atual: {}", cost);
 
         // 3. join reorder and hashjoin
+        println!("\n----------------------- Stage 3 ------------------------------\n");
         self.optimize_stage(&mut expr, &mut cost, STAGE3_RULES.iter(), 3, 8);
         let root_id = Id::from(expr.as_ref().len() - 1);
+        println!("Custo final: {}", cost);
         
 
         expr
     }
-
 
 
     /// Optimize the expression with the given rules in multiple iterations.
@@ -137,31 +133,28 @@ impl Optimizer {
         iteration: usize,
         iter_limit: usize,
     ) {
+        let mut eqs = 0;
+
         for i in 0..iteration {
+            println!("\n ^^^^ Stage atual - Iteração: {} ^^^^\n ", i);
             let runner = egg::Runner::<_, _, ()>::new(self.analysis.clone())
                 .with_expr(expr)
                 .with_iter_limit(iter_limit)
                 .run(rules.clone());
     
             // Visita e enumera as alternativas no E-Graph
-            visit_and_enumerate_alternatives(&runner.egraph);
-            
+            eqs = visit_and_enumerate_alternatives(&runner.egraph);
+                        
             let cost_fn = cost::CostFn {
                 egraph: &runner.egraph,
             };
             let extractor = egg::Extractor::new(&runner.egraph, cost_fn);
             let cost0;
             (cost0, *expr) = extractor.find_best(runner.roots[0]);
-    
-            println!("Custos: Og {} | Alt {}", *cost, cost0);
-            println!("\n&&&&&&&&&&&&&&& Next stage &&&&&&&&&&&&&&&");
             
-            /*if cost0 >= *cost {
-                println!("[Stage] Custo não melhorou. Parando iteração.");
-                break;
-            }*/
             *cost = cost0;
         }
+        println!("\nNúmero total de classes de equivalência: {}\n", eqs);
     }
 
     /// Returns the cost for each node in the expression.
