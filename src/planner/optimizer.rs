@@ -5,6 +5,8 @@
 // Temos prints para exibir o número de classes de equivalência e o número de expressões equivalentes em cada classe
 // Faz-se várias iterações para otimizar a expressão, em cada iteração são aplicadas reescritas de regras
 
+// Já conseguimos distinguir operadores relacionais de outros operadores
+
 use std::sync::LazyLock;
 use egg::Language;
 use egg::CostFunction;
@@ -75,6 +77,23 @@ fn visit_and_enumerate_alternatives(egraph: &EGraph) -> usize {
     classes_eq
 }
 
+// Função para distinguir operadores relacionais de outros operadores
+fn detail_expr(nodes: &Vec<String>) {
+    let lista_relacionais = ["And", "Or", "Not", "Eq", "Lt", "Gt"];
+    println!("\n\nHERE\n");
+    for n in nodes {
+        // Extrai o primeiro elemento antes do '('
+        if let Some(first_element) = n.split('(').next() {
+            // Verifica se está na lista de operadores relacionais
+            if lista_relacionais.contains(&first_element) {
+                println!("Flag relacional: {}", n);
+            }
+        }
+    }
+}
+
+
+
 impl Optimizer {
     pub fn new(catalog: RootCatalogRef, stat: Statistics, config: Config) -> Self {
         Self {
@@ -98,6 +117,8 @@ impl Optimizer {
         let root_id = Id::from(expr.as_ref().len() - 1);
 
         println!("\nCusto inicial: {}", cost);
+
+        detail_expr(&expr.as_ref().iter().map(|n| format_enode(n)).collect::<Vec<String>>());
 
         // 1. pushdown apply
         println!("\n----------------------- Stage 1 ------------------------------\n");
@@ -222,3 +243,12 @@ static STAGE3_RULES: LazyLock<Vec<Rewrite>> = LazyLock::new(|| {
     rules.append(&mut rules::order::order_rules());
     rules
 });
+
+// listaRelacionais = ["and", "or", "not", "eq", "lt", "gt"]
+
+// listaReferencias = ["join", "filter", "proj", "hashagg", "order", "scan"]
+// Expressao: recExpr { nodes: list }
+// for l in list:
+// if l in listaReferencias:
+//     print(l)
+//     
