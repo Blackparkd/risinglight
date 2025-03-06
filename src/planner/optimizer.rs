@@ -13,7 +13,8 @@ use egg::CostFunction;
 use egg::Id;
 use csv::Writer;
 use std::error::Error;
-use std::fs::{File, OpenOptions};
+use std::path::Path;
+use std::fs::{File, OpenOptions, create_dir_all};
 use super::*;
 use crate::catalog::RootCatalogRef;
 use crate::planner::EGraph;
@@ -66,39 +67,75 @@ fn visit_and_enumerate_alternatives(egraph: &EGraph) -> usize {
     let mut classes_eq = 0;
     let mut num_nodes = 0;
 
+
     for (class_id, eclass) in egraph.classes().enumerate() {
         classes_eq += 1;
         num_nodes = 0;
         // Itera sobre todos os nós na classe de equivalência
-        for (node_id, enode) in eclass.nodes.iter().enumerate() {
+        for (_node_id, _enode) in eclass.nodes.iter().enumerate() {
             num_nodes += 1;
-            //println!("\nNó Número {:?}    Nó Info: {:?}   Filhos: {:?}\n", node_id, enode, enode.children().len());
         }
-        println!("\nClasse {:?} Nº de Exprs Equivalentes: {:?}\n", class_id, num_nodes);
+        println!("Classe {:>3} | Nº de Exprs Equivalentes: {:>2}", class_id, num_nodes);
+
     }
     classes_eq
 }
 
+fn generate_filename(base_name: &str) -> String {
+    let mut counter = 1;
 
-
-// Função para armazenar os resultados no CSV
-fn save_to_csv(stage: &str, counter: usize) -> Result<(), Box<dyn Error>> {
-    let file_path = "output.csv";
-    let file = OpenOptions::new()
-        .append(true)
-        .create(true)
-        .open(file_path)?;
-    let mut wtr = Writer::from_writer(file);
-    
-    // Escreve apenas os valores, sem cabeçalho
-    wtr.write_record(&[stage, &counter.to_string()])?;
-    wtr.flush()?;
-    Ok(())
+    loop {
+        let new_filename = format!("{}_{}.csv", base_name, counter);
+        if !Path::new(&new_filename).exists() {
+            return new_filename;
+        }
+        counter += 1;
+    }
 }
 
 
-// Função para distinguir operadores relacionais de outros operadores
-fn detail_expr(stage: &str, nodes: &Vec<String>, file_path: &str) {
+/// Função para garantir que a pasta exista antes de criar o ficheiro
+fn ensure_directory_exists(file_path: &str) -> Result<(), Box<dyn Error>> {
+    if let Some(parent) = Path::new(file_path).parent() {
+        create_dir_all(parent)?;  // Cria o diretório se não existir
+    }
+    Ok(())
+}
+
+/// Função para escrever apenas o cabeçalho do stage no CSV
+fn write_stage_header(stage: &str, base_name: &str) -> Result<(), Box<dyn Error>> {
+    let file = OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open(base_name)?;
+    let mut wtr = Writer::from_writer(file);
+
+    // Escreve apenas o estágio
+    wtr.write_record(&[stage])?;
+    wtr.flush()?;
+
+    Ok(())
+}
+
+/// Função para armazenar os números no CSV
+fn save_to_csv(counter: usize, base_name: &str) -> Result<String, Box<dyn Error>> {
+    ensure_directory_exists(base_name)?;
+
+    let file = OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open(base_name)?;
+    let mut wtr = Writer::from_writer(file);
+
+    // Adiciona apenas o número
+    wtr.write_record(&[counter.to_string()])?;
+    wtr.flush()?;
+
+    Ok(base_name.to_string())
+}
+
+
+fn detail_expr(expr: &RecExpr, file_name: &str) {
     let lista_relacionais = [
         "Join", "Filter", "Proj", "HashAgg", "Order", "Scan",
         "HashJoin", "IndexScan", "SeqScan", "MergeJoin",
@@ -106,8 +143,8 @@ fn detail_expr(stage: &str, nodes: &Vec<String>, file_path: &str) {
     ];
 
     let mut counter = 0;
-    println!("\n\nExprs Relacionais: \n");
-    for n in nodes {
+    println!("\n\nExprs Relacionais:");
+    for n in expr.as_ref().iter().map(|n| format_enode(n)) {
         if let Some(first_element) = n.split('(').next() {
             if lista_relacionais.contains(&first_element) {
                 counter += 1;
@@ -119,8 +156,8 @@ fn detail_expr(stage: &str, nodes: &Vec<String>, file_path: &str) {
         println!("Não foram encontrados operadores relacionais na expressão");
     }
 
-    // Armazena os resultados no CSV sem cabeçalho
-    if let Err(err) = save_to_csv(stage, counter) {
+    // Escrever apenas o número
+    if let Err(err) = save_to_csv(counter, file_name) {
         eprintln!("Erro ao escrever no CSV: {}", err);
     }
 }
@@ -140,49 +177,52 @@ impl Optimizer {
 
     pub fn optimize(&self, mut expr: RecExpr) -> RecExpr {
         let mut cost = f32::MAX;
-
-        // Define extra rules for some configurations
-        let mut extra_rules = vec![];
-        if self.analysis.config.enable_range_filter_scan {
-            extra_rules.append(&mut rules::range::filter_scan_rule());
-        }
-
-        let root_id = Id::from(expr.as_ref().len() - 1);
-
+        let output_folder = "src/planner/outputs";
+        create_dir_all(output_folder).expect("Erro ao criar a pasta para guardar os resultados");
+        let base_name = format!("{}/relational_expressions", output_folder);
+        let file_name = generate_filename(&base_name);
+    
         println!("\nCusto inicial: {}", cost);
-
-        let formatted_nodes: Vec<String> = expr.as_ref().iter().map(|n| format_enode(n)).collect();
-
-        detail_expr("I", &formatted_nodes, "output.csv");
-        println!("Resultados guardados em '{}'", "output.csv");
         
-
+        // Usar a nova função antes de detail_expr
+        if let Err(err) = write_stage_header("Inicial", &file_name) {
+            eprintln!("Erro ao escrever cabeçalho: {}", err);
+        }
+        detail_expr(&expr, &file_name);
+    
         // 1. pushdown apply
         println!("\n----------------------- Stage 1 ------------------------------\n");
         self.optimize_stage(&mut expr, &mut cost, STAGE1_RULES.iter(), 2, 6);
-        let root_id = Id::from(expr.as_ref().len() - 1);
         println!("Custo atual: {}", cost);
-        detail_expr("1", &formatted_nodes, "output.csv");
-        
+        if let Err(err) = write_stage_header("Stage1", &file_name) {
+            eprintln!("Erro ao escrever cabeçalho: {}", err);
+        }
+        detail_expr(&expr, &file_name);
+
         // 2. pushdown predicate and projection
         println!("\n----------------------- Stage 2 ------------------------------\n");
-        let rules = STAGE2_RULES.iter().chain(&extra_rules);
-        self.optimize_stage(&mut expr, &mut cost, rules, 4, 6);
-        let root_id = Id::from(expr.as_ref().len() - 1);
+        self.optimize_stage(&mut expr, &mut cost, STAGE2_RULES.iter(), 4, 6);
         println!("Custo atual: {}", cost);
-        detail_expr("2", &formatted_nodes, "output.csv");
+        
+        if let Err(err) = write_stage_header("Stage2", &file_name) {
+            eprintln!("Erro ao escrever cabeçalho: {}", err);
+        }
+        detail_expr(&expr, &file_name);
 
         // 3. join reorder and hashjoin
         println!("\n----------------------- Stage 3 ------------------------------\n");
         self.optimize_stage(&mut expr, &mut cost, STAGE3_RULES.iter(), 3, 8);
-        let root_id = Id::from(expr.as_ref().len() - 1);
         println!("Custo final: {}", cost);
-        detail_expr("3", &formatted_nodes, "output.csv");
-        
-        println!("Resultados guardados em '{}'", "output.csv");
+        if let Err(err) = write_stage_header("Stage3", &file_name) {
+            eprintln!("Erro ao escrever cabeçalho: {}", err);
+        }
+        detail_expr(&expr, &file_name);
+
+        println!("\n\nResultados guardados em '{}'", file_name);
 
         expr
     }
+
 
 
     /// Optimize the expression with the given rules in multiple iterations.
@@ -285,11 +325,3 @@ static STAGE3_RULES: LazyLock<Vec<Rewrite>> = LazyLock::new(|| {
     rules
 });
 
-// listaRelacionais = ["and", "or", "not", "eq", "lt", "gt"]
-
-// listaReferencias = ["join", "filter", "proj", "hashagg", "order", "scan"]
-// Expressao: recExpr { nodes: list }
-// for l in list:
-// if l in listaReferencias:
-//     print(l)
-//
