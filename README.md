@@ -4,6 +4,18 @@
 
 - Conseguimos inserir prints para ver quantos grupos de expressões equivalentes existem e quantas expressões existem dentro desses grupos.
 - Conseguimos inserir prints para distinguir entre expressões relacionais e outras.
+- Já consegue escrever para ficheiro a quantidade de expressões relacionais que existem por fase de optimização. Feito da seguinte forma:
+```csv 
+Inicial
+5
+Stage1
+2
+Stage2
+1
+Stage3
+1
+```
+ 
 ----------------------------------
 
 
