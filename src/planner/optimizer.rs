@@ -11,7 +11,9 @@ use std::sync::LazyLock;
 use egg::Language;
 use egg::CostFunction;
 use egg::Id;
-
+use csv::Writer;
+use std::error::Error;
+use std::fs::{File, OpenOptions};
 use super::*;
 use crate::catalog::RootCatalogRef;
 use crate::planner::EGraph;
@@ -77,18 +79,49 @@ fn visit_and_enumerate_alternatives(egraph: &EGraph) -> usize {
     classes_eq
 }
 
+
+
+// Função para armazenar os resultados no CSV
+fn save_to_csv(stage: &str, counter: usize) -> Result<(), Box<dyn Error>> {
+    let file_path = "output.csv";
+    let file = OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open(file_path)?;
+    let mut wtr = Writer::from_writer(file);
+    
+    // Escreve apenas os valores, sem cabeçalho
+    wtr.write_record(&[stage, &counter.to_string()])?;
+    wtr.flush()?;
+    Ok(())
+}
+
+
 // Função para distinguir operadores relacionais de outros operadores
-fn detail_expr(nodes: &Vec<String>) {
-    let lista_relacionais = ["And", "Or", "Not", "Eq", "Lt", "Gt"];
-    println!("\n\nHERE\n");
+fn detail_expr(stage: &str, nodes: &Vec<String>, file_path: &str) {
+    let lista_relacionais = [
+        "Join", "Filter", "Proj", "HashAgg", "Order", "Scan",
+        "HashJoin", "IndexScan", "SeqScan", "MergeJoin",
+        "Values", "TopN",
+    ];
+
+    let mut counter = 0;
+    println!("\n\nExprs Relacionais: \n");
     for n in nodes {
-        // Extrai o primeiro elemento antes do '('
         if let Some(first_element) = n.split('(').next() {
-            // Verifica se está na lista de operadores relacionais
             if lista_relacionais.contains(&first_element) {
-                println!("Flag relacional: {}", n);
+                counter += 1;
+                println!("{}", first_element);
             }
         }
+    }
+    if counter == 0 {
+        println!("Não foram encontrados operadores relacionais na expressão");
+    }
+
+    // Armazena os resultados no CSV sem cabeçalho
+    if let Err(err) = save_to_csv(stage, counter) {
+        eprintln!("Erro ao escrever no CSV: {}", err);
     }
 }
 
@@ -118,13 +151,18 @@ impl Optimizer {
 
         println!("\nCusto inicial: {}", cost);
 
-        detail_expr(&expr.as_ref().iter().map(|n| format_enode(n)).collect::<Vec<String>>());
+        let formatted_nodes: Vec<String> = expr.as_ref().iter().map(|n| format_enode(n)).collect();
+
+        detail_expr("I", &formatted_nodes, "output.csv");
+        println!("Resultados guardados em '{}'", "output.csv");
+        
 
         // 1. pushdown apply
         println!("\n----------------------- Stage 1 ------------------------------\n");
         self.optimize_stage(&mut expr, &mut cost, STAGE1_RULES.iter(), 2, 6);
         let root_id = Id::from(expr.as_ref().len() - 1);
         println!("Custo atual: {}", cost);
+        detail_expr("1", &formatted_nodes, "output.csv");
         
         // 2. pushdown predicate and projection
         println!("\n----------------------- Stage 2 ------------------------------\n");
@@ -132,13 +170,16 @@ impl Optimizer {
         self.optimize_stage(&mut expr, &mut cost, rules, 4, 6);
         let root_id = Id::from(expr.as_ref().len() - 1);
         println!("Custo atual: {}", cost);
+        detail_expr("2", &formatted_nodes, "output.csv");
 
         // 3. join reorder and hashjoin
         println!("\n----------------------- Stage 3 ------------------------------\n");
         self.optimize_stage(&mut expr, &mut cost, STAGE3_RULES.iter(), 3, 8);
         let root_id = Id::from(expr.as_ref().len() - 1);
         println!("Custo final: {}", cost);
+        detail_expr("3", &formatted_nodes, "output.csv");
         
+        println!("Resultados guardados em '{}'", "output.csv");
 
         expr
     }
@@ -251,4 +292,4 @@ static STAGE3_RULES: LazyLock<Vec<Rewrite>> = LazyLock::new(|| {
 // for l in list:
 // if l in listaReferencias:
 //     print(l)
-//     
+//
