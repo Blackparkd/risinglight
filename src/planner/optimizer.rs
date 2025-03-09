@@ -18,6 +18,7 @@ use std::fs::{File, OpenOptions, create_dir_all};
 use super::*;
 use crate::catalog::RootCatalogRef;
 use crate::planner::EGraph;
+use std::collections::HashMap;
 
 /// Plan optimizer.
 #[derive(Clone)]
@@ -62,22 +63,53 @@ fn format_enode(enode: &Expr) -> String {
 
 // Função para visitar e enumerar as alternativas no E-Graph
 fn visit_and_enumerate_alternatives(egraph: &EGraph) -> usize {
+
     // Itera sobre todas as classes de equivalência no E-Graph
-    
     let mut classes_eq = 0;
     let mut num_nodes = 0;
-
+    let mut class_nodes_map: HashMap<usize, Vec<String>> = HashMap::new();
 
     for (class_id, eclass) in egraph.classes().enumerate() {
         classes_eq += 1;
         num_nodes = 0;
+        let mut nodes = Vec::new();
+        
         // Itera sobre todos os nós na classe de equivalência
-        for (_node_id, _enode) in eclass.nodes.iter().enumerate() {
+        for (_node_id, enode) in eclass.nodes.iter().enumerate() {
             num_nodes += 1;
+            nodes.push(format!("{:?}", enode));
         }
-        println!("Classe {:>3} | Nº de Exprs Equivalentes: {:>2}", class_id, num_nodes);
-
+        
+        class_nodes_map.insert(class_id, nodes);
+        println!("Classe {:>3} | Expressões: {:>2}\n", class_id, num_nodes);
     }
+
+    // Calcular o valor mínimo, máximo e médio de expressões por classe
+    let mut min_nodes = usize::MAX;
+    let mut max_nodes = usize::MIN;
+    let mut total_nodes = 0;
+
+    for nodes in class_nodes_map.values() {
+        let count = nodes.len();
+        if count < min_nodes {
+            min_nodes = count;
+        }
+        if count > max_nodes {
+            max_nodes = count;
+        }
+        total_nodes += count;
+    }
+
+    let avg_nodes = if classes_eq > 0 {
+        total_nodes as f64 / classes_eq as f64
+    } else {
+        0.0
+    };
+
+    println!("Mínimo: {}", min_nodes);
+    println!("Máximo: {}", max_nodes);
+    println!("Média: {:.2}", avg_nodes);
+
     classes_eq
 }
 
@@ -143,18 +175,14 @@ fn detail_expr(expr: &RecExpr, file_name: &str) {
     ];
 
     let mut counter = 0;
-    println!("\n\nExprs Relacionais:");
     for n in expr.as_ref().iter().map(|n| format_enode(n)) {
         if let Some(first_element) = n.split('(').next() {
             if lista_relacionais.contains(&first_element) {
                 counter += 1;
-                println!("{}", first_element);
             }
         }
     }
-    if counter == 0 {
-        println!("Não foram encontrados operadores relacionais na expressão");
-    }
+    println!("Relacionais: {}", counter);
 
     // Escrever apenas o número
     if let Err(err) = save_to_csv(counter, file_name) {
@@ -191,7 +219,7 @@ impl Optimizer {
         detail_expr(&expr, &file_name);
     
         // 1. pushdown apply
-        println!("\n----------------------- Stage 1 ------------------------------\n");
+        println!("\nStage 1\n");
         self.optimize_stage(&mut expr, &mut cost, STAGE1_RULES.iter(), 2, 6);
         println!("Custo atual: {}", cost);
         if let Err(err) = write_stage_header("Stage1", &file_name) {
@@ -200,7 +228,7 @@ impl Optimizer {
         detail_expr(&expr, &file_name);
 
         // 2. pushdown predicate and projection
-        println!("\n----------------------- Stage 2 ------------------------------\n");
+        println!("\nStage 2\n");
         self.optimize_stage(&mut expr, &mut cost, STAGE2_RULES.iter(), 4, 6);
         println!("Custo atual: {}", cost);
         
@@ -210,7 +238,7 @@ impl Optimizer {
         detail_expr(&expr, &file_name);
 
         // 3. join reorder and hashjoin
-        println!("\n----------------------- Stage 3 ------------------------------\n");
+        println!("\nStage 3\n");
         self.optimize_stage(&mut expr, &mut cost, STAGE3_RULES.iter(), 3, 8);
         println!("Custo final: {}", cost);
         if let Err(err) = write_stage_header("Stage3", &file_name) {
@@ -238,7 +266,7 @@ impl Optimizer {
         let mut eqs = 0;
 
         for i in 0..iteration {
-            println!("\n ^^^^ Stage atual - Iteração: {} ^^^^\n ", i);
+            println!("\nIteração: {}\n ", i);
             let runner = egg::Runner::<_, _, ()>::new(self.analysis.clone())
                 .with_expr(expr)
                 .with_iter_limit(iter_limit)
@@ -256,7 +284,7 @@ impl Optimizer {
             
             *cost = cost0;
         }
-        println!("\nNúmero total de classes de equivalência: {}\n", eqs);
+        println!("\nClasses-Total {}\n", eqs);
     }
 
     /// Returns the cost for each node in the expression.
