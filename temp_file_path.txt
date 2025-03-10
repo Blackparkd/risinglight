@@ -1,1 +1,1 @@
-tests/mytests/q2.sql
+tests/mytests/q5.sql
