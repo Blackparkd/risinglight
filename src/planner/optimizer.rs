@@ -83,7 +83,7 @@ fn visit_and_enumerate_alternatives(egraph: &EGraph) -> (usize, usize, usize, f6
         }
         
         class_nodes_map.insert(class_id, nodes);
-        println!("Classe {:>3} | Expressões: {:>2}\n", class_id, num_nodes);
+        //println!("Classe {:>3} | Expressões: {:>2}\n", class_id, num_nodes);
     }
 
     // Calcular o valor mínimo, máximo e médio de expressões por classe
@@ -108,9 +108,9 @@ fn visit_and_enumerate_alternatives(egraph: &EGraph) -> (usize, usize, usize, f6
         0.0
     };
 
-    println!("Mínimo: {}", min_nodes);
+    /*println!("Mínimo: {}", min_nodes);
     println!("Máximo: {}", max_nodes);
-    println!("Média: {:.2}", avg_nodes);
+    println!("Média: {:.2}", avg_nodes);*/
 
     (classes_eq, min_nodes, max_nodes, avg_nodes)
 }
@@ -194,7 +194,7 @@ fn detail_expr(expr: &RecExpr) -> usize {
             }
         }
     }
-    println!("Relacionais: {}", counter);
+    //println!("Relacionais: {}", counter);
 
     counter
 }
@@ -236,8 +236,8 @@ impl Optimizer {
             create_dir_all(parent).expect("Failed to create output directory");
         }
 
-        println!("Ficheiro de entrada: {}", file_path);
-        println!("Ficheiro de saída: {}", output_file);
+        //println!("Ficheiro de entrada: {}", file_path);
+        //println!("Ficheiro de saída: {}", output_file);
 
         // 0. stage inicial (pré-otimização)
         let mut egraph = EGraph::new(self.analysis.clone());
@@ -332,8 +332,8 @@ impl Optimizer {
         iteration: usize,
         iter_limit: usize,
     ) {
-        for i in 0..iteration {
-            println!("\nIteração: {}\n ", i);
+        for _i in 0..iteration {
+            //println!("\nIteração: {}\n ", i);
             let runner = egg::Runner::<_, _, ()>::new(self.analysis.clone())
                 .with_expr(expr)
                 .with_iter_limit(iter_limit)

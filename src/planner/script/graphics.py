@@ -5,88 +5,109 @@ import sys
 import os
 
 def create_graph(file_path):
-    # Verificar se o arquivo existe
+    # Get query number from file path
+    query_num = os.path.basename(file_path).split('_')[0][1:]
+    
+    # Create output directory if it doesn't exist
+    output_dir = "src/planner/outputs/graphs"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
+    # Verify if file exists
     if not os.path.exists(file_path):
-        print(f"❌ Arquivo não encontrado: {file_path}")
+        print(f"❌ File not found: {file_path}")
         return
 
-    # 📌 Listas para armazenar os valores
+    # 📌 Lists to store values
     stages = []
-    custos = []
-    classes_total = []
-    relacionais = []
-    minimos = []
-    maximos = []
-    medias = []
+    costs = []
+    total_classes = []
+    relationals = []
+    minimums = []
+    maximums = []
+    averages = []
 
-    # 📌 Ler o CSV e guardar os valores
+    # 📌 Read CSV and store values
     with open(file_path, mode="r", encoding="utf-8") as file:
         reader = csv.DictReader(file)
         for row in reader:
             stages.append(int(row["Stage"]))
-            custos.append(float(row["Custo"]))
-            classes_total.append(int(row["Classes_Total"]))
-            relacionais.append(int(row["Relacionais"]))
-            minimos.append(int(row["Min"]))
-            maximos.append(int(row["Max"]))
-            medias.append(float(row["Media"]))
+            costs.append(float(row["Custo"]))
+            total_classes.append(int(row["Classes_Total"]))
+            relationals.append(int(row["Relacionais"]))
+            minimums.append(int(row["Min"]))
+            maximums.append(int(row["Max"]))
+            averages.append(float(row["Media"]))
 
-    # Criar o gráfico de barras agrupadas
-    stages = (0, 1, 2, 3)  # seus estágios
-    metricas = {
-        'Custo': custos,
-        'Grupos de Expressões': classes_total,
-        'Operadores Relacionais': relacionais,
-        'Mínimo de Expressões': minimos,
-        'Máximo de Expressões': maximos,
-        'Média de Expressões': medias
+    # Create grouped bar chart
+    stages = (0, 1, 2, 3)  # your stages
+    metrics = {
+        'Cost': costs,
+        'Expression Groups': total_classes,
+        'Relational Operators': relationals,
+        'Minimum Expressions': minimums,
+        'Maximum Expressions': maximums,
+        'Average Expressions': averages
     }
 
-    x = np.arange(len(stages))  # posições das labels
-    width = 0.15  # reduzida a largura das barras para caber mais
-    multiplier = 0
+    x = np.arange(len(stages))  # label positions
+    width = 0.15 # width of the bars
+    multiplier = 0 # multiplier to adjust bar position
 
-    # Configurar o subplot
+    # Configure subplot
     fig, ax = plt.subplots(figsize=(15, 8), layout='constrained')
 
-    # Adicionar cor de fundo
-    fig.patch.set_facecolor('#478ac9') # Cor de fundo do gráfico
-    ax.set_facecolor('#2e353b')  # Cor de fundo do subplot
+    # Add background color
+    fig.patch.set_facecolor('#478ac9')  # Graph background color
+    ax.set_facecolor('#2e353b')  # Subplot background color
 
-
-    # Criar as barras para cada métrica
+    # Create bars for each metric
     colors = ['#FF8C00', '#008B8B', '#FF4500', '#D3D3D3', '#9370DB', '#20B2AA']
-    for (attribute, measurement), color in zip(metricas.items(), colors):
+    for (attribute, measurement), color in zip(metrics.items(), colors):
         offset = width * multiplier
         rects = ax.bar(x + offset, measurement, width, label=attribute, color=color)
-        ax.bar_label(rects, padding=3, rotation=0, color='white', fontsize=8)  # Rotação vertical para caber
+        ax.bar_label(rects, padding=3, rotation=0, color='white', fontsize=8)
         multiplier += 1
 
-    # Configurar labels e título
-    ax.set_ylabel('Valores')
-    ax.set_xlabel('Stages de Optimização')
-    ax.set_title('Métricas')
+    # Configure labels and title
+    ax.set_ylabel('Values')
+    ax.set_xlabel('Optimization Stages')
+    ax.set_title('Metrics')
     ax.set_xticks(x + width, stages)
     ax.legend(
         loc='upper center', 
         bbox_to_anchor=(0.5, 1.15), 
         ncol=3,
-        facecolor='#2e353b',  # Cor de fundo da legenda
-        edgecolor='#478ac9',  # Cor da borda da legenda
-        labelcolor='white'    # Cor do texto da legenda
+        facecolor='#2e353b',
+        edgecolor='#478ac9',
+        labelcolor='white'
     )
 
-    # Ajustar escala logarítmica para o eixo Y devido aos valores de custo
+    # Adjust logarithmic scale for Y axis due to cost values
     ax.set_yscale('log')
 
-    # Ajustar layout e aumentar o espaço para as labels
+    # Adjust layout and increase space for labels
     plt.tight_layout()
-    plt.subplots_adjust(bottom=0.15)  # Aumenta o espaço na parte inferior
+    plt.subplots_adjust(bottom=0.15)
+
+    # Save the plot as PNG file
+    output_path = os.path.join(output_dir, f"query{query_num}_graph.png")
+    plt.savefig(output_path, 
+                bbox_inches='tight',
+                facecolor=fig.get_facecolor(),
+                edgecolor='none',
+                dpi=300)
+    print(f"✅ Graph saved as: {output_path}")
+    
+    # Show the plot
     plt.show()
 
 def main():
-    print("Digite o caminho do arquivo CSV para gerar o gráfico:")
-    file_path = input().strip()
+    if len(sys.argv) <= 1:
+        print("❌ No file path provided")
+        return
+        
+    file_path = sys.argv[1].strip()
     create_graph(file_path)
 
 if __name__ == "__main__":
