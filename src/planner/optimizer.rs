@@ -209,19 +209,25 @@ impl Optimizer {
         create_dir_all(output_folder).expect("Erro ao criar a pasta para guardar os resultados");
         let base_name = format!("{}/relational_expressions", output_folder);
         let file_name = generate_filename(&base_name);
-    
-        println!("\nCusto inicial: {}", cost);
         
         // Usar a nova função antes de detail_expr
         if let Err(err) = write_stage_header("Inicial", &file_name) {
             eprintln!("Erro ao escrever cabeçalho: {}", err);
         }
+        
+        // 0. stage inicial
+        let mut egraph = EGraph::new(self.analysis.clone());
+        egraph.add_expr(&expr);
+        println!("Stage 0\n");
+        let classes_eq = visit_and_enumerate_alternatives(&egraph);
+        println!("Classes-Total {}\n", classes_eq);
+        println!("\nCustoI: {}", cost);
         detail_expr(&expr, &file_name);
-    
+
         // 1. pushdown apply
         println!("\nStage 1\n");
         self.optimize_stage(&mut expr, &mut cost, STAGE1_RULES.iter(), 2, 6);
-        println!("Custo atual: {}", cost);
+        println!("Custo1: {}", cost);
         if let Err(err) = write_stage_header("Stage1", &file_name) {
             eprintln!("Erro ao escrever cabeçalho: {}", err);
         }
@@ -230,7 +236,7 @@ impl Optimizer {
         // 2. pushdown predicate and projection
         println!("\nStage 2\n");
         self.optimize_stage(&mut expr, &mut cost, STAGE2_RULES.iter(), 4, 6);
-        println!("Custo atual: {}", cost);
+        println!("Custo2: {}", cost);
         
         if let Err(err) = write_stage_header("Stage2", &file_name) {
             eprintln!("Erro ao escrever cabeçalho: {}", err);
@@ -240,7 +246,7 @@ impl Optimizer {
         // 3. join reorder and hashjoin
         println!("\nStage 3\n");
         self.optimize_stage(&mut expr, &mut cost, STAGE3_RULES.iter(), 3, 8);
-        println!("Custo final: {}", cost);
+        println!("Custo3: {}", cost);
         if let Err(err) = write_stage_header("Stage3", &file_name) {
             eprintln!("Erro ao escrever cabeçalho: {}", err);
         }
