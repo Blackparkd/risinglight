@@ -16,7 +16,7 @@ Stage,Custo,Relacionais,Classes_Total,Min,Max,Media
 
 ```
 - We already have histogram implementations for better analysis. Graphs in the following format:
-![Histogram](src/planner/outputs/histograms/q1.png)
+![Histogram](src/planner/histograms/q1.png)
 
 ----------------------------------
 
