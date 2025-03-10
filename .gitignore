@@ -6,3 +6,4 @@
 .gdb_history
 risinglight
 /.DS_Store
+/src/planner/outputs
