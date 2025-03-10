@@ -1,0 +1,289 @@
+[2m2025-03-10T14:45:00.630768Z[0m [32m INFO[0m [2mrisinglight[0m[2m:[0m Connected to a transient in-memory database.
+[?2004h[K> [2C\dt[?2004l
+Stage 0
+
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Classe  15 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+CustoI: 340282350000000000000000000000000000000
+Relacionais: 5
+
+Stage 1
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  3
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  2
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Mínimo: 1
+Máximo: 3
+Média: 1.25
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 9
+
+Custo1: 4050
+Relacionais: 2
+
+Stage 2
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  2
+
+Mínimo: 1
+Máximo: 2
+Média: 1.12
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 3
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 8
+
+Custo2: 4000
+Relacionais: 1
+
+Stage 3
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 8
+
+Custo3: 4000
+Relacionais: 1
+
+
+Resultados guardados em 'src/planner/outputs/relational_expressions_18.csv'
++---+------------+---+--------------+
+| 0 | pg_catalog | 2 | pg_indexes   |
+| 0 | pg_catalog | 0 | contributors |
+| 0 | pg_catalog | 3 | pg_attribute |
+| 0 | pg_catalog | 4 | pg_stat      |
+| 0 | pg_catalog | 1 | pg_tables    |
++---+------------+---+--------------+
+in 0.005s
+[?2004h[K> [2C[?2004l
+Interrupted
+[?2004h[K> [2C[?2004l
+Exited
