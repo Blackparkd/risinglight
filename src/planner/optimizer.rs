@@ -8,13 +8,13 @@
 // Já conseguimos distinguir operadores relacionais de outros operadores
 
 use std::sync::LazyLock;
-use egg::Language;
 use egg::CostFunction;
-use egg::Id;
 use csv::Writer;
 use std::error::Error;
 use std::path::Path;
-use std::fs::{File, OpenOptions, create_dir_all};
+use std::fs::{OpenOptions, create_dir_all};
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 use super::*;
 use crate::catalog::RootCatalogRef;
 use crate::planner::EGraph;
@@ -32,6 +32,7 @@ pub struct Config {
     pub enable_range_filter_scan: bool,
     pub table_is_sorted_by_primary_key: bool,
 }
+
 
 // Função para formatar um nó de forma legível
 fn format_enode(enode: &Expr) -> String {
@@ -61,12 +62,13 @@ fn format_enode(enode: &Expr) -> String {
     }
 }
 
+
 // Função para visitar e enumerar as alternativas no E-Graph
-fn visit_and_enumerate_alternatives(egraph: &EGraph) -> usize {
+fn visit_and_enumerate_alternatives(egraph: &EGraph) -> (usize, usize, usize, f64) {
 
     // Itera sobre todas as classes de equivalência no E-Graph
     let mut classes_eq = 0;
-    let mut num_nodes = 0;
+    let mut num_nodes;
     let mut class_nodes_map: HashMap<usize, Vec<String>> = HashMap::new();
 
     for (class_id, eclass) in egraph.classes().enumerate() {
@@ -110,20 +112,9 @@ fn visit_and_enumerate_alternatives(egraph: &EGraph) -> usize {
     println!("Máximo: {}", max_nodes);
     println!("Média: {:.2}", avg_nodes);
 
-    classes_eq
+    (classes_eq, min_nodes, max_nodes, avg_nodes)
 }
 
-fn generate_filename(base_name: &str) -> String {
-    let mut counter = 1;
-
-    loop {
-        let new_filename = format!("{}_{}.csv", base_name, counter);
-        if !Path::new(&new_filename).exists() {
-            return new_filename;
-        }
-        counter += 1;
-    }
-}
 
 
 /// Função para garantir que a pasta exista antes de criar o ficheiro
@@ -134,24 +125,37 @@ fn ensure_directory_exists(file_path: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-/// Função para escrever apenas o cabeçalho do stage no CSV
-fn write_stage_header(stage: &str, base_name: &str) -> Result<(), Box<dyn Error>> {
+/// Função para escrever o cabeçalho do CSV
+fn write_csv_header(file_path: &str) -> Result<(), Box<dyn Error>> {
     let file = OpenOptions::new()
-        .append(true)
+        .write(true)
         .create(true)
-        .open(base_name)?;
+        .truncate(true)
+        .open(file_path)?;
     let mut wtr = Writer::from_writer(file);
 
-    // Escreve apenas o estágio
-    wtr.write_record(&[stage])?;
+    wtr.write_record(&["Stage", "Custo", "Relacionais", "Classes_Total", "Min", "Max", "Media"])?;
     wtr.flush()?;
-
     Ok(())
 }
 
-/// Função para armazenar os números no CSV
-fn save_to_csv(counter: usize, base_name: &str) -> Result<String, Box<dyn Error>> {
+/// Função para armazenar os dados no CSV
+fn save_to_csv(
+    stage: &str, 
+    custo: f32, 
+    relacionais: usize, 
+    classes_total: usize,
+    min: usize,
+    max: usize,
+    media: f64,
+    base_name: &str
+) -> Result<String, Box<dyn Error>> {
     ensure_directory_exists(base_name)?;
+
+    // Se o arquivo não existe, escreve o cabeçalho
+    if !Path::new(base_name).exists() {
+        write_csv_header(base_name)?;
+    }
 
     let file = OpenOptions::new()
         .append(true)
@@ -159,15 +163,23 @@ fn save_to_csv(counter: usize, base_name: &str) -> Result<String, Box<dyn Error>
         .open(base_name)?;
     let mut wtr = Writer::from_writer(file);
 
-    // Adiciona apenas o número
-    wtr.write_record(&[counter.to_string()])?;
+    // Escreve os dados em uma única linha
+    wtr.write_record(&[
+        stage.to_string(),
+        custo.to_string(),
+        relacionais.to_string(),
+        classes_total.to_string(),
+        min.to_string(),
+        max.to_string(),
+        format!("{:.2}", media)
+    ])?;
     wtr.flush()?;
 
     Ok(base_name.to_string())
 }
 
-
-fn detail_expr(expr: &RecExpr, file_name: &str) {
+// Função para identificar operadores relacionais e contar
+fn detail_expr(expr: &RecExpr) -> usize {
     let lista_relacionais = [
         "Join", "Filter", "Proj", "HashAgg", "Order", "Scan",
         "HashJoin", "IndexScan", "SeqScan", "MergeJoin",
@@ -184,10 +196,7 @@ fn detail_expr(expr: &RecExpr, file_name: &str) {
     }
     println!("Relacionais: {}", counter);
 
-    // Escrever apenas o número
-    if let Err(err) = save_to_csv(counter, file_name) {
-        eprintln!("Erro ao escrever no CSV: {}", err);
-    }
+    counter
 }
 
 
@@ -205,54 +214,108 @@ impl Optimizer {
 
     pub fn optimize(&self, mut expr: RecExpr) -> RecExpr {
         let mut cost = f32::MAX;
-        let output_folder = "src/planner/outputs";
-        create_dir_all(output_folder).expect("Erro ao criar a pasta para guardar os resultados");
-        let base_name = format!("{}/relational_expressions", output_folder);
-        let file_name = generate_filename(&base_name);
+
+        // Faz-se aqui a leitura do ficheiro temporário para garantir que o ficheiro já tem o path certo
+        // Caminho do ficheiro temporário
+        let temp_file_path = "temp_file_path.txt";
+
+        // Ler o caminho do arquivo do ficheiro temporário
+        let file = File::open(temp_file_path).expect("Falha ao abrir o ficheiro temporário");
+        let reader = BufReader::new(file);
+
+        // Ler a primeira linha (que contém o caminho do arquivo)
+        let file_path = reader.lines().next().expect("Ficheiro temporário vazio").expect("Falha ao ler a linha");
+
+        // Usar o caminho do arquivo
+        let path = Path::new(&file_path);
+        let file_stem = path.file_stem().unwrap_or_default().to_string_lossy();
+        let output_file = format!("src/planner/outputs/query_data/{}_data.csv", file_stem);
         
-        // Usar a nova função antes de detail_expr
-        if let Err(err) = write_stage_header("Inicial", &file_name) {
-            eprintln!("Erro ao escrever cabeçalho: {}", err);
+        // Criar o diretório se não existir
+        if let Some(parent) = Path::new(&output_file).parent() {
+            create_dir_all(parent).expect("Failed to create output directory");
         }
-        
-        // 0. stage inicial
+
+        println!("Ficheiro de entrada: {}", file_path);
+        println!("Ficheiro de saída: {}", output_file);
+
+        // 0. stage inicial (pré-otimização)
         let mut egraph = EGraph::new(self.analysis.clone());
         egraph.add_expr(&expr);
         println!("Stage 0\n");
-        let classes_eq = visit_and_enumerate_alternatives(&egraph);
+        let relacionais = detail_expr(&expr);
+        let (classes_eq, min_nodes, max_nodes, avg_nodes) = visit_and_enumerate_alternatives(&egraph);
         println!("Classes-Total {}\n", classes_eq);
         println!("\nCustoI: {}", cost);
-        detail_expr(&expr, &file_name);
+        
+        save_to_csv(
+            "0",
+            cost,
+            relacionais,
+            classes_eq,
+            min_nodes,
+            max_nodes,
+            avg_nodes,
+            &output_file,
+        ).expect("Falha ao salvar no CSV");
 
-        // 1. pushdown apply
+        // 1. pushdown apply 
         println!("\nStage 1\n");
         self.optimize_stage(&mut expr, &mut cost, STAGE1_RULES.iter(), 2, 6);
         println!("Custo1: {}", cost);
-        if let Err(err) = write_stage_header("Stage1", &file_name) {
-            eprintln!("Erro ao escrever cabeçalho: {}", err);
-        }
-        detail_expr(&expr, &file_name);
+        let relacionais = detail_expr(&expr);
+        let (classes_eq, min_nodes, max_nodes, avg_nodes) = visit_and_enumerate_alternatives(&egraph);
+        println!("Classes-Total {}\n", classes_eq);
+        save_to_csv(
+            "1",
+            cost,
+            relacionais,
+            classes_eq,
+            min_nodes,
+            max_nodes,
+            avg_nodes,
+            &output_file,
+        ).expect("Falha ao salvar no CSV");
+
 
         // 2. pushdown predicate and projection
         println!("\nStage 2\n");
         self.optimize_stage(&mut expr, &mut cost, STAGE2_RULES.iter(), 4, 6);
         println!("Custo2: {}", cost);
-        
-        if let Err(err) = write_stage_header("Stage2", &file_name) {
-            eprintln!("Erro ao escrever cabeçalho: {}", err);
-        }
-        detail_expr(&expr, &file_name);
+        let relacionais = detail_expr(&expr);
+        let (classes_eq, min_nodes, max_nodes, avg_nodes) = visit_and_enumerate_alternatives(&egraph);
+        println!("Classes-Total {}\n", classes_eq);
+        save_to_csv(
+            "2",
+            cost,
+            relacionais,
+            classes_eq,
+            min_nodes,
+            max_nodes,
+            avg_nodes,
+            &output_file,
+        ).expect("Falha ao salvar no CSV");
+
 
         // 3. join reorder and hashjoin
         println!("\nStage 3\n");
         self.optimize_stage(&mut expr, &mut cost, STAGE3_RULES.iter(), 3, 8);
         println!("Custo3: {}", cost);
-        if let Err(err) = write_stage_header("Stage3", &file_name) {
-            eprintln!("Erro ao escrever cabeçalho: {}", err);
-        }
-        detail_expr(&expr, &file_name);
+        let relacionais = detail_expr(&expr);
+        let (classes_eq, min_nodes, max_nodes, avg_nodes) = visit_and_enumerate_alternatives(&egraph);
+        println!("Classes-Total {}\n", classes_eq);
+        save_to_csv(
+            "3",
+            cost,
+            relacionais,
+            classes_eq,
+            min_nodes,
+            max_nodes,
+            avg_nodes,
+            &output_file,
+        ).expect("Falha ao salvar no CSV");
 
-        println!("\n\nResultados guardados em '{}'", file_name);
+        println!("\n\nResultados guardados em '{}'", &output_file);
 
         expr
     }
@@ -269,17 +332,12 @@ impl Optimizer {
         iteration: usize,
         iter_limit: usize,
     ) {
-        let mut eqs = 0;
-
         for i in 0..iteration {
             println!("\nIteração: {}\n ", i);
             let runner = egg::Runner::<_, _, ()>::new(self.analysis.clone())
                 .with_expr(expr)
                 .with_iter_limit(iter_limit)
                 .run(rules.clone());
-    
-            // Visita e enumera as alternativas no E-Graph
-            eqs = visit_and_enumerate_alternatives(&runner.egraph);
                         
             let cost_fn = cost::CostFn {
                 egraph: &runner.egraph,
@@ -290,7 +348,6 @@ impl Optimizer {
             
             *cost = cost0;
         }
-        println!("\nClasses-Total {}\n", eqs);
     }
 
     /// Returns the cost for each node in the expression.
