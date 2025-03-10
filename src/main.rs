@@ -4,8 +4,10 @@
 
 use std::fs::File;
 use std::path::PathBuf;
+use std::path::Path;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
+use std::io::Write;
 
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
@@ -66,6 +68,7 @@ struct Args {
     #[clap(long)]
     port: Option<u16>,
 }
+
 
 // human-readable message
 fn print_chunk(chunk: &Chunk, output_format: &Option<String>) {
@@ -305,6 +308,20 @@ async fn run_sqllogictest(db: Database, path: &str, output_format: Option<String
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::parse();
+
+    if let Some(ref file_path) = args.file {
+        println!("O caminho do arquivo é: {}", file_path);
+        let temp_file_path = "temp_file_path.txt";
+        let mut file = File::create(temp_file_path).expect("Falha ao criar o ficheiro temporário");
+        // Escrever o caminho do arquivo no ficheiro temporário
+        writeln!(file, "{}", file_path).expect("Falha ao escrever no ficheiro temporário");
+
+    }
+    else {
+        println!("Nenhum arquivo foi passado como argumento");
+    }
+
+
 
     if args.tokio_console {
         console_subscriber::init();
