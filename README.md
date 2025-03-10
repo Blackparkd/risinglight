@@ -1,21 +1,23 @@
 # RisingLight
 
--- Análise de Optimizadores SQL -- 
+-- SQL Optimizers Analysis --
 
-- Conseguimos inserir prints para ver quantos grupos de expressões equivalentes existem e quantas expressões existem dentro desses grupos.
-- Conseguimos inserir prints para distinguir entre expressões relacionais e outras.
-- Já consegue escrever para ficheiro a quantidade de expressões relacionais que existem por fase de optimização. Feito da seguinte forma:
+- We managed to add prints to see how many groups of equivalent expressions exist and how many expressions exist within these groups.
+- We managed to add prints to distinguish between relational expressions and others.
+- It can now write to file the number of relational expressions that exist per optimization phase.
+- We have implemented the extraction of relevant information to file. File structure is as follows:
+
 ```csv 
-Inicial
-5
-Stage1
-2
-Stage2
-1
-Stage3
-1
+Stage,Custo,Relacionais,Classes_Total,Min,Max,Media
+0,340282350000000000000000000000000000000,6,61,1,1,1.00
+1,28128.111,5,55,1,1,1.00
+2,14618.112,6,55,1,6,1.38
+3,14618.112,6,52,1,2,1.10
+
 ```
- 
+- We already have histogram implementations for better analysis. Graphs in the following format:
+![Histogram](src/planner/outputs/histograms/q1.png)
+
 ----------------------------------
 
 
