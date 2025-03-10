@@ -1,0 +1,5177 @@
+[2m2025-03-10T15:14:51.451361Z[0m [32m INFO[0m [2mrisinglight[0m[2m:[0m Connected to a transient in-memory database.
+[?2004h[K> [2C[K> CREATE TABLE NATION  (
+    N_NATIONKEY  INT PRIMARY KEY,
+    N_NAME       CHAR(25) NOT NULL,
+    N_REGIONKEY  INT NOT NULL,
+    N_COMMENT    VARCHAR(152)
+);
+
+CREATE TABLE REGION  (
+    R_REGIONKEY  INT PRIMARY KEY,
+    R_NAME       CHAR(25) NOT NULL,
+    R_COMMENT    VARCHAR(152)
+);
+
+CREATE TABLE PART  (
+    P_PARTKEY     INT PRIMARY KEY,
+    P_NAME        VARCHAR(55) NOT NULL,
+    P_MFGR        CHAR(25) NOT NULL,
+    P_BRAND       CHAR(10) NOT NULL,
+    P_TYPE        VARCHAR(25) NOT NULL,
+    P_SIZE        INT NOT NULL,
+    P_CONTAINER   CHAR(10) NOT NULL,
+    P_RETAILPRICE DECIMAL(15,2) NOT NULL,
+    P_COMMENT     VARCHAR(23) NOT NULL
+);
+
+CREATE TABLE SUPPLIER (
+    S_SUPPKEY     INT PRIMARY KEY,
+    S_NAME        CHAR(25) NOT NULL,
+    S_ADDRESS     VARCHAR(40) NOT NULL,
+    S_NATIONKEY   INT NOT NULL,
+    S_PHONE       CHAR(15) NOT NULL,
+    S_ACCTBAL     DECIMAL(15,2) NOT NULL,
+    S_COMMENT     VARCHAR(101) NOT NULL
+);
+
+CREATE TABLE PARTSUPP (
+    PS_PARTKEY     INT NOT NULL,
+    PS_SUPPKEY     INT NOT NULL,
+    PS_AVAILQTY    INT NOT NULL,
+    PS_SUPPLYCOST  DECIMAL(15,2)  NOT NULL,
+    PS_COMMENT     VARCHAR(199) NOT NULL
+    -- PRIMARY KEY (PS_PARTKEY, PS_SUPPKEY)
+);
+
+CREATE TABLE CUSTOMER (
+    C_CUSTKEY     INT PRIMARY KEY,
+    C_NAME        VARCHAR(25) NOT NULL,
+    C_ADDRESS     VARCHAR(40) NOT NULL,
+    C_NATIONKEY   INT NOT NULL,
+    C_PHONE       CHAR(15) NOT NULL,
+    C_ACCTBAL     DECIMAL(15,2)   NOT NULL,
+    C_MKTSEGMENT  CHAR(10) NOT NULL,
+    C_COMMENT     VARCHAR(117) NOT NULL
+);
+
+CREATE TABLE ORDERS (
+    O_ORDERKEY       INT PRIMARY KEY,
+    O_CUSTKEY        INT NOT NULL,
+    O_ORDERSTATUS    CHAR(1) NOT NULL,
+    O_TOTALPRICE     DECIMAL(15,2) NOT NULL,
+    O_ORDERDATE      DATE NOT NULL,
+    O_ORDERPRIORITY  CHAR(15) NOT NULL,  
+    O_CLERK          CHAR(15) NOT NULL, 
+    O_SHIPPRIORITY   INT NOT NULL,
+    O_COMMENT        VARCHAR(79) NOT NULL
+);
+
+CREATE TABLE LINEITEM (
+    L_ORDERKEY      INT NOT NULL,
+    L_PARTKEY       INT NOT NULL,
+    L_SUPPKEY       INT NOT NULL,
+    L_LINENUMBER    INT NOT NULL,
+    L_QUANTITY      DECIMAL(15,2) NOT NULL,
+    L_EXTENDEDPRICE DECIMAL(15,2) NOT NULL,
+    L_DISCOUNT      DECIMAL(15,2) NOT NULL,
+    L_TAX           DECIMAL(15,2) NOT NULL,
+    L_RETURNFLAG    CHAR(1) NOT NULL,
+    L_LINESTATUS    CHAR(1) NOT NULL,
+    L_SHIPDATE      DATE NOT NULL,
+    L_COMMITDATE    DATE NOT NULL,
+    L_RECEIPTDATE   DATE NOT NULL,
+    L_SHIPINSTRUCT  CHAR(25) NOT NULL,
+    L_SHIPMODE      CHAR(10) NOT NULL,
+    L_COMMENT       VARCHAR(44) NOT NULL
+    -- PRIMARY KEY (L_ORDERKEY, L_LINENUMBER)
+);
+
+
+COPY CUSTOMER FROM 'tpch-dbgen/tbl/customer.tbl' ( DELIMITER '|' );
+COPY NATION FROM 'tpch-dbgen/tbl/nation.tbl' ( DELIMITER '|' );
+COPY ORDERS FROM 'tpch-dbgen/tbl/orders.tbl' ( DELIMITER '|' );
+COPY PART FROM 'tpch-dbgen/tbl/part.tbl' ( DELIMITER '|' );
+COPY PARTSUPP FROM 'tpch-dbgen/tbl/partsupp.tbl' ( DELIMITER '|' );
+COPY REGION FROM 'tpch-dbgen/tbl/region.tbl' ( DELIMITER '|' );
+COPY SUPPLIER FROM 'tpch-dbgen/tbl/supplier.tbl' ( DELIMITER '|' );
+COPY LINEITEM FROM 'tpch-dbgen/tbl/lineitem.tbl' ( DELIMITER '|' );
+
+select
+    l_returnflag,
+    l_linestatus,
+    sum(l_quantity) as sum_qty,
+    sum(l_extendedprice) as sum_base_price,
+    sum(l_extendedprice * (1 - l_discount)) as sum_disc_price,
+    sum(l_extendedprice * (1 - l_discount) * (1 + l_tax)) as sum_charge,
+    avg(l_quantity) as avg_qty,
+    avg(l_extendedprice) as avg_price,
+    avg(l_discount) as avg_disc,
+    count(*) as count_order
+from
+    lineitem
+where
+    l_shipdate <= date '1998-12-01' - interval '71' day
+group by
+    l_returnflag,
+    l_linestatus
+order by
+    l_returnflag,
+    l_linestatus;
+[?2004l
+[?2004h[K? [2C;[?2004l
+Stage 0
+
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+Classes-Total 1
+
+
+CustoI: 340282350000000000000000000000000000000
+Relacionais: 0
+
+Stage 1
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 1
+
+Custo1: 0.1
+Relacionais: 0
+
+Stage 2
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 3
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 1
+
+Custo2: 0.1
+Relacionais: 0
+
+Stage 3
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 1
+
+Custo3: 0.1
+Relacionais: 0
+
+
+Resultados guardados em 'src/planner/outputs/relational_expressions_40.csv'
+Stage 0
+
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+Classes-Total 1
+
+
+CustoI: 340282350000000000000000000000000000000
+Relacionais: 0
+
+Stage 1
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 1
+
+Custo1: 0.1
+Relacionais: 0
+
+Stage 2
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 3
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 1
+
+Custo2: 0.1
+Relacionais: 0
+
+Stage 3
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 1
+
+Custo3: 0.1
+Relacionais: 0
+
+
+Resultados guardados em 'src/planner/outputs/relational_expressions_41.csv'
+Stage 0
+
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+Classes-Total 1
+
+
+CustoI: 340282350000000000000000000000000000000
+Relacionais: 0
+
+Stage 1
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 1
+
+Custo1: 0.1
+Relacionais: 0
+
+Stage 2
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 3
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 1
+
+Custo2: 0.1
+Relacionais: 0
+
+Stage 3
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 1
+
+Custo3: 0.1
+Relacionais: 0
+
+
+Resultados guardados em 'src/planner/outputs/relational_expressions_42.csv'
+Stage 0
+
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+Classes-Total 1
+
+
+CustoI: 340282350000000000000000000000000000000
+Relacionais: 0
+
+Stage 1
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 1
+
+Custo1: 0.1
+Relacionais: 0
+
+Stage 2
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 3
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 1
+
+Custo2: 0.1
+Relacionais: 0
+
+Stage 3
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 1
+
+Custo3: 0.1
+Relacionais: 0
+
+
+Resultados guardados em 'src/planner/outputs/relational_expressions_43.csv'
+Stage 0
+
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+Classes-Total 1
+
+
+CustoI: 340282350000000000000000000000000000000
+Relacionais: 0
+
+Stage 1
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 1
+
+Custo1: 0.1
+Relacionais: 0
+
+Stage 2
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 3
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 1
+
+Custo2: 0.1
+Relacionais: 0
+
+Stage 3
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 1
+
+Custo3: 0.1
+Relacionais: 0
+
+
+Resultados guardados em 'src/planner/outputs/relational_expressions_44.csv'
+Stage 0
+
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+Classes-Total 1
+
+
+CustoI: 340282350000000000000000000000000000000
+Relacionais: 0
+
+Stage 1
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 1
+
+Custo1: 0.1
+Relacionais: 0
+
+Stage 2
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 3
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 1
+
+Custo2: 0.1
+Relacionais: 0
+
+Stage 3
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 1
+
+Custo3: 0.1
+Relacionais: 0
+
+
+Resultados guardados em 'src/planner/outputs/relational_expressions_45.csv'
+Stage 0
+
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+Classes-Total 1
+
+
+CustoI: 340282350000000000000000000000000000000
+Relacionais: 0
+
+Stage 1
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 1
+
+Custo1: 0.1
+Relacionais: 0
+
+Stage 2
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 3
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 1
+
+Custo2: 0.1
+Relacionais: 0
+
+Stage 3
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 1
+
+Custo3: 0.1
+Relacionais: 0
+
+
+Resultados guardados em 'src/planner/outputs/relational_expressions_46.csv'
+Stage 0
+
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+Classes-Total 1
+
+
+CustoI: 340282350000000000000000000000000000000
+Relacionais: 0
+
+Stage 1
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 1
+
+Custo1: 0.1
+Relacionais: 0
+
+Stage 2
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 3
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 1
+
+Custo2: 0.1
+Relacionais: 0
+
+Stage 3
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 1
+
+Custo3: 0.1
+Relacionais: 0
+
+
+Resultados guardados em 'src/planner/outputs/relational_expressions_47.csv'
+Stage 0
+
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+Classes-Total 14
+
+
+CustoI: 340282350000000000000000000000000000000
+Relacionais: 0
+
+Stage 1
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 14
+
+Custo1: 0.3
+Relacionais: 0
+
+Stage 2
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 3
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 14
+
+Custo2: 0.3
+Relacionais: 0
+
+Stage 3
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 14
+
+Custo3: 0.3
+Relacionais: 0
+
+
+Resultados guardados em 'src/planner/outputs/relational_expressions_48.csv'
+Stage 0
+
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+Classes-Total 10
+
+
+CustoI: 340282350000000000000000000000000000000
+Relacionais: 0
+
+Stage 1
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 10
+
+Custo1: 0.3
+Relacionais: 0
+
+Stage 2
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 3
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 10
+
+Custo2: 0.3
+Relacionais: 0
+
+Stage 3
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 10
+
+Custo3: 0.3
+Relacionais: 0
+
+
+Resultados guardados em 'src/planner/outputs/relational_expressions_49.csv'
+Stage 0
+
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+Classes-Total 15
+
+
+CustoI: 340282350000000000000000000000000000000
+Relacionais: 0
+
+Stage 1
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 15
+
+Custo1: 0.3
+Relacionais: 0
+
+Stage 2
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 3
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 15
+
+Custo2: 0.3
+Relacionais: 0
+
+Stage 3
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 15
+
+Custo3: 0.3
+Relacionais: 0
+
+
+Resultados guardados em 'src/planner/outputs/relational_expressions_50.csv'
+Stage 0
+
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+Classes-Total 15
+
+
+CustoI: 340282350000000000000000000000000000000
+Relacionais: 0
+
+Stage 1
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 15
+
+Custo1: 0.3
+Relacionais: 0
+
+Stage 2
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 3
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 15
+
+Custo2: 0.3
+Relacionais: 0
+
+Stage 3
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 15
+
+Custo3: 0.3
+Relacionais: 0
+
+
+Resultados guardados em 'src/planner/outputs/relational_expressions_51.csv'
+Stage 0
+
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+Classes-Total 11
+
+
+CustoI: 340282350000000000000000000000000000000
+Relacionais: 0
+
+Stage 1
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 11
+
+Custo1: 0.3
+Relacionais: 0
+
+Stage 2
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 3
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 11
+
+Custo2: 0.3
+Relacionais: 0
+
+Stage 3
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 11
+
+Custo3: 0.3
+Relacionais: 0
+
+
+Resultados guardados em 'src/planner/outputs/relational_expressions_52.csv'
+Stage 0
+
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+Classes-Total 9
+
+
+CustoI: 340282350000000000000000000000000000000
+Relacionais: 0
+
+Stage 1
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 9
+
+Custo1: 0.3
+Relacionais: 0
+
+Stage 2
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 3
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 9
+
+Custo2: 0.3
+Relacionais: 0
+
+Stage 3
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 9
+
+Custo3: 0.3
+Relacionais: 0
+
+
+Resultados guardados em 'src/planner/outputs/relational_expressions_53.csv'
+Stage 0
+
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+Classes-Total 13
+
+
+CustoI: 340282350000000000000000000000000000000
+Relacionais: 0
+
+Stage 1
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 13
+
+Custo1: 0.3
+Relacionais: 0
+
+Stage 2
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 3
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 13
+
+Custo2: 0.3
+Relacionais: 0
+
+Stage 3
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 13
+
+Custo3: 0.3
+Relacionais: 0
+
+
+Resultados guardados em 'src/planner/outputs/relational_expressions_54.csv'
+Stage 0
+
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Classe  15 | Expressões:  1
+
+Classe  16 | Expressões:  1
+
+Classe  17 | Expressões:  1
+
+Classe  18 | Expressões:  1
+
+Classe  19 | Expressões:  1
+
+Classe  20 | Expressões:  1
+
+Classe  21 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+Classes-Total 22
+
+
+CustoI: 340282350000000000000000000000000000000
+Relacionais: 0
+
+Stage 1
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Classe  15 | Expressões:  1
+
+Classe  16 | Expressões:  1
+
+Classe  17 | Expressões:  1
+
+Classe  18 | Expressões:  1
+
+Classe  19 | Expressões:  1
+
+Classe  20 | Expressões:  1
+
+Classe  21 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Classe  15 | Expressões:  1
+
+Classe  16 | Expressões:  1
+
+Classe  17 | Expressões:  1
+
+Classe  18 | Expressões:  1
+
+Classe  19 | Expressões:  1
+
+Classe  20 | Expressões:  1
+
+Classe  21 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 22
+
+Custo1: 0.3
+Relacionais: 0
+
+Stage 2
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Classe  15 | Expressões:  1
+
+Classe  16 | Expressões:  1
+
+Classe  17 | Expressões:  1
+
+Classe  18 | Expressões:  1
+
+Classe  19 | Expressões:  1
+
+Classe  20 | Expressões:  1
+
+Classe  21 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Classe  15 | Expressões:  1
+
+Classe  16 | Expressões:  1
+
+Classe  17 | Expressões:  1
+
+Classe  18 | Expressões:  1
+
+Classe  19 | Expressões:  1
+
+Classe  20 | Expressões:  1
+
+Classe  21 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Classe  15 | Expressões:  1
+
+Classe  16 | Expressões:  1
+
+Classe  17 | Expressões:  1
+
+Classe  18 | Expressões:  1
+
+Classe  19 | Expressões:  1
+
+Classe  20 | Expressões:  1
+
+Classe  21 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 3
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Classe  15 | Expressões:  1
+
+Classe  16 | Expressões:  1
+
+Classe  17 | Expressões:  1
+
+Classe  18 | Expressões:  1
+
+Classe  19 | Expressões:  1
+
+Classe  20 | Expressões:  1
+
+Classe  21 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 22
+
+Custo2: 0.3
+Relacionais: 0
+
+Stage 3
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Classe  15 | Expressões:  1
+
+Classe  16 | Expressões:  1
+
+Classe  17 | Expressões:  1
+
+Classe  18 | Expressões:  1
+
+Classe  19 | Expressões:  1
+
+Classe  20 | Expressões:  1
+
+Classe  21 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Classe  15 | Expressões:  1
+
+Classe  16 | Expressões:  1
+
+Classe  17 | Expressões:  1
+
+Classe  18 | Expressões:  1
+
+Classe  19 | Expressões:  1
+
+Classe  20 | Expressões:  1
+
+Classe  21 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Classe  15 | Expressões:  1
+
+Classe  16 | Expressões:  1
+
+Classe  17 | Expressões:  1
+
+Classe  18 | Expressões:  1
+
+Classe  19 | Expressões:  1
+
+Classe  20 | Expressões:  1
+
+Classe  21 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 22
+
+Custo3: 0.3
+Relacionais: 0
+
+
+Resultados guardados em 'src/planner/outputs/relational_expressions_55.csv'
+Stage 0
+
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Classe  15 | Expressões:  1
+
+Classe  16 | Expressões:  1
+
+Classe  17 | Expressões:  1
+
+Classe  18 | Expressões:  1
+
+Classe  19 | Expressões:  1
+
+Classe  20 | Expressões:  1
+
+Classe  21 | Expressões:  1
+
+Classe  22 | Expressões:  1
+
+Classe  23 | Expressões:  1
+
+Classe  24 | Expressões:  1
+
+Classe  25 | Expressões:  1
+
+Classe  26 | Expressões:  1
+
+Classe  27 | Expressões:  1
+
+Classe  28 | Expressões:  1
+
+Classe  29 | Expressões:  1
+
+Classe  30 | Expressões:  1
+
+Classe  31 | Expressões:  1
+
+Classe  32 | Expressões:  1
+
+Classe  33 | Expressões:  1
+
+Classe  34 | Expressões:  1
+
+Classe  35 | Expressões:  1
+
+Classe  36 | Expressões:  1
+
+Classe  37 | Expressões:  1
+
+Classe  38 | Expressões:  1
+
+Classe  39 | Expressões:  1
+
+Classe  40 | Expressões:  1
+
+Classe  41 | Expressões:  1
+
+Classe  42 | Expressões:  1
+
+Classe  43 | Expressões:  1
+
+Classe  44 | Expressões:  1
+
+Classe  45 | Expressões:  1
+
+Classe  46 | Expressões:  1
+
+Classe  47 | Expressões:  1
+
+Classe  48 | Expressões:  1
+
+Classe  49 | Expressões:  1
+
+Classe  50 | Expressões:  1
+
+Classe  51 | Expressões:  1
+
+Classe  52 | Expressões:  1
+
+Classe  53 | Expressões:  1
+
+Classe  54 | Expressões:  1
+
+Classe  55 | Expressões:  1
+
+Classe  56 | Expressões:  1
+
+Classe  57 | Expressões:  1
+
+Classe  58 | Expressões:  1
+
+Classe  59 | Expressões:  1
+
+Classe  60 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+Classes-Total 61
+
+
+CustoI: 340282350000000000000000000000000000000
+Relacionais: 6
+
+Stage 1
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Classe  15 | Expressões:  1
+
+Classe  16 | Expressões:  1
+
+Classe  17 | Expressões:  1
+
+Classe  18 | Expressões:  1
+
+Classe  19 | Expressões:  1
+
+Classe  20 | Expressões:  1
+
+Classe  21 | Expressões:  1
+
+Classe  22 | Expressões:  1
+
+Classe  23 | Expressões:  1
+
+Classe  24 | Expressões:  1
+
+Classe  25 | Expressões:  1
+
+Classe  26 | Expressões:  1
+
+Classe  27 | Expressões:  1
+
+Classe  28 | Expressões:  1
+
+Classe  29 | Expressões:  1
+
+Classe  30 | Expressões:  1
+
+Classe  31 | Expressões:  1
+
+Classe  32 | Expressões:  1
+
+Classe  33 | Expressões:  1
+
+Classe  34 | Expressões:  1
+
+Classe  35 | Expressões:  1
+
+Classe  36 | Expressões:  1
+
+Classe  37 | Expressões:  1
+
+Classe  38 | Expressões:  1
+
+Classe  39 | Expressões:  1
+
+Classe  40 | Expressões:  1
+
+Classe  41 | Expressões:  2
+
+Classe  42 | Expressões:  1
+
+Classe  43 | Expressões:  1
+
+Classe  44 | Expressões:  1
+
+Classe  45 | Expressões:  1
+
+Classe  46 | Expressões:  1
+
+Classe  47 | Expressões:  1
+
+Classe  48 | Expressões:  1
+
+Classe  49 | Expressões:  1
+
+Classe  50 | Expressões:  1
+
+Classe  51 | Expressões:  1
+
+Classe  52 | Expressões:  1
+
+Classe  53 | Expressões:  1
+
+Classe  54 | Expressões:  1
+
+Classe  55 | Expressões:  1
+
+Classe  56 | Expressões:  1
+
+Classe  57 | Expressões:  2
+
+Classe  58 | Expressões:  1
+
+Mínimo: 1
+Máximo: 2
+Média: 1.03
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Classe  15 | Expressões:  1
+
+Classe  16 | Expressões:  1
+
+Classe  17 | Expressões:  1
+
+Classe  18 | Expressões:  1
+
+Classe  19 | Expressões:  1
+
+Classe  20 | Expressões:  1
+
+Classe  21 | Expressões:  1
+
+Classe  22 | Expressões:  1
+
+Classe  23 | Expressões:  1
+
+Classe  24 | Expressões:  1
+
+Classe  25 | Expressões:  1
+
+Classe  26 | Expressões:  1
+
+Classe  27 | Expressões:  1
+
+Classe  28 | Expressões:  1
+
+Classe  29 | Expressões:  1
+
+Classe  30 | Expressões:  1
+
+Classe  31 | Expressões:  1
+
+Classe  32 | Expressões:  1
+
+Classe  33 | Expressões:  1
+
+Classe  34 | Expressões:  1
+
+Classe  35 | Expressões:  1
+
+Classe  36 | Expressões:  1
+
+Classe  37 | Expressões:  1
+
+Classe  38 | Expressões:  1
+
+Classe  39 | Expressões:  1
+
+Classe  40 | Expressões:  1
+
+Classe  41 | Expressões:  1
+
+Classe  42 | Expressões:  1
+
+Classe  43 | Expressões:  1
+
+Classe  44 | Expressões:  1
+
+Classe  45 | Expressões:  1
+
+Classe  46 | Expressões:  1
+
+Classe  47 | Expressões:  1
+
+Classe  48 | Expressões:  1
+
+Classe  49 | Expressões:  1
+
+Classe  50 | Expressões:  1
+
+Classe  51 | Expressões:  1
+
+Classe  52 | Expressões:  1
+
+Classe  53 | Expressões:  1
+
+Classe  54 | Expressões:  1
+
+Mínimo: 1
+Máximo: 1
+Média: 1.00
+
+Classes-Total 55
+
+Custo1: 28128.111
+Relacionais: 5
+
+Stage 2
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  3
+
+Classe  10 | Expressões:  1
+
+Classe  11 | Expressões:  3
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  1
+
+Classe  14 | Expressões:  1
+
+Classe  15 | Expressões:  1
+
+Classe  16 | Expressões:  1
+
+Classe  17 | Expressões:  1
+
+Classe  18 | Expressões:  1
+
+Classe  19 | Expressões:  1
+
+Classe  20 | Expressões:  1
+
+Classe  21 | Expressões:  2
+
+Classe  22 | Expressões:  1
+
+Classe  23 | Expressões:  1
+
+Classe  24 | Expressões:  1
+
+Classe  25 | Expressões:  1
+
+Classe  26 | Expressões:  1
+
+Classe  27 | Expressões:  1
+
+Classe  28 | Expressões:  1
+
+Classe  29 | Expressões:  4
+
+Classe  30 | Expressões:  3
+
+Classe  31 | Expressões:  4
+
+Classe  32 | Expressões: 10
+
+Classe  33 | Expressões:  1
+
+Classe  34 | Expressões:  1
+
+Classe  35 | Expressões:  1
+
+Classe  36 | Expressões:  1
+
+Classe  37 | Expressões:  1
+
+Classe  38 | Expressões:  1
+
+Classe  39 | Expressões:  2
+
+Classe  40 | Expressões:  1
+
+Classe  41 | Expressões:  1
+
+Classe  42 | Expressões:  1
+
+Classe  43 | Expressões:  1
+
+Classe  44 | Expressões:  1
+
+Classe  45 | Expressões:  1
+
+Classe  46 | Expressões:  1
+
+Classe  47 | Expressões:  1
+
+Classe  48 | Expressões:  1
+
+Classe  49 | Expressões:  1
+
+Classe  50 | Expressões:  1
+
+Classe  51 | Expressões:  1
+
+Classe  52 | Expressões:  1
+
+Classe  53 | Expressões:  1
+
+Classe  54 | Expressões:  2
+
+Classe  55 | Expressões:  3
+
+Classe  56 | Expressões:  8
+
+Classe  57 | Expressões:  1
+
+Classe  58 | Expressões:  2
+
+Classe  59 | Expressões:  1
+
+Classe  60 | Expressões:  1
+
+Classe  61 | Expressões:  6
+
+Classe  62 | Expressões:  6
+
+Classe  63 | Expressões:  4
+
+Classe  64 | Expressões:  4
+
+Classe  65 | Expressões:  1
+
+Classe  66 | Expressões:  3
+
+Classe  67 | Expressões:  3
+
+Mínimo: 1
+Máximo: 10
+Média: 1.79
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  2
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  2
+
+Classe  13 | Expressões:  2
+
+Classe  14 | Expressões:  1
+
+Classe  15 | Expressões:  2
+
+Classe  16 | Expressões:  1
+
+Classe  17 | Expressões:  1
+
+Classe  18 | Expressões:  1
+
+Classe  19 | Expressões:  1
+
+Classe  20 | Expressões:  1
+
+Classe  21 | Expressões:  2
+
+Classe  22 | Expressões:  2
+
+Classe  23 | Expressões:  1
+
+Classe  24 | Expressões:  1
+
+Classe  25 | Expressões:  6
+
+Classe  26 | Expressões:  1
+
+Classe  27 | Expressões:  2
+
+Classe  28 | Expressões:  1
+
+Classe  29 | Expressões:  1
+
+Classe  30 | Expressões:  1
+
+Classe  31 | Expressões:  1
+
+Classe  32 | Expressões:  1
+
+Classe  33 | Expressões:  1
+
+Classe  34 | Expressões:  1
+
+Classe  35 | Expressões:  1
+
+Classe  36 | Expressões:  1
+
+Classe  37 | Expressões:  1
+
+Classe  38 | Expressões:  1
+
+Classe  39 | Expressões:  1
+
+Classe  40 | Expressões:  1
+
+Classe  41 | Expressões:  1
+
+Classe  42 | Expressões:  1
+
+Classe  43 | Expressões:  1
+
+Classe  44 | Expressões:  1
+
+Classe  45 | Expressões:  1
+
+Classe  46 | Expressões:  1
+
+Classe  47 | Expressões:  1
+
+Classe  48 | Expressões:  2
+
+Classe  49 | Expressões:  6
+
+Classe  50 | Expressões:  1
+
+Classe  51 | Expressões:  2
+
+Classe  52 | Expressões:  1
+
+Classe  53 | Expressões:  2
+
+Classe  54 | Expressões:  2
+
+Mínimo: 1
+Máximo: 6
+Média: 1.38
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  2
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  2
+
+Classe  13 | Expressões:  2
+
+Classe  14 | Expressões:  1
+
+Classe  15 | Expressões:  2
+
+Classe  16 | Expressões:  1
+
+Classe  17 | Expressões:  1
+
+Classe  18 | Expressões:  1
+
+Classe  19 | Expressões:  1
+
+Classe  20 | Expressões:  1
+
+Classe  21 | Expressões:  1
+
+Classe  22 | Expressões:  1
+
+Classe  23 | Expressões:  2
+
+Classe  24 | Expressões:  2
+
+Classe  25 | Expressões:  6
+
+Classe  26 | Expressões:  1
+
+Classe  27 | Expressões:  2
+
+Classe  28 | Expressões:  1
+
+Classe  29 | Expressões:  1
+
+Classe  30 | Expressões:  1
+
+Classe  31 | Expressões:  1
+
+Classe  32 | Expressões:  1
+
+Classe  33 | Expressões:  1
+
+Classe  34 | Expressões:  1
+
+Classe  35 | Expressões:  1
+
+Classe  36 | Expressões:  1
+
+Classe  37 | Expressões:  1
+
+Classe  38 | Expressões:  1
+
+Classe  39 | Expressões:  1
+
+Classe  40 | Expressões:  1
+
+Classe  41 | Expressões:  1
+
+Classe  42 | Expressões:  1
+
+Classe  43 | Expressões:  1
+
+Classe  44 | Expressões:  1
+
+Classe  45 | Expressões:  1
+
+Classe  46 | Expressões:  1
+
+Classe  47 | Expressões:  1
+
+Classe  48 | Expressões:  2
+
+Classe  49 | Expressões:  1
+
+Classe  50 | Expressões:  2
+
+Classe  51 | Expressões:  1
+
+Classe  52 | Expressões:  6
+
+Classe  53 | Expressões:  2
+
+Classe  54 | Expressões:  2
+
+Mínimo: 1
+Máximo: 6
+Média: 1.38
+
+Iteração: 3
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  2
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  2
+
+Classe  13 | Expressões:  2
+
+Classe  14 | Expressões:  1
+
+Classe  15 | Expressões:  2
+
+Classe  16 | Expressões:  1
+
+Classe  17 | Expressões:  1
+
+Classe  18 | Expressões:  1
+
+Classe  19 | Expressões:  1
+
+Classe  20 | Expressões:  1
+
+Classe  21 | Expressões:  2
+
+Classe  22 | Expressões:  2
+
+Classe  23 | Expressões:  1
+
+Classe  24 | Expressões:  1
+
+Classe  25 | Expressões:  6
+
+Classe  26 | Expressões:  1
+
+Classe  27 | Expressões:  2
+
+Classe  28 | Expressões:  1
+
+Classe  29 | Expressões:  1
+
+Classe  30 | Expressões:  1
+
+Classe  31 | Expressões:  1
+
+Classe  32 | Expressões:  1
+
+Classe  33 | Expressões:  1
+
+Classe  34 | Expressões:  1
+
+Classe  35 | Expressões:  1
+
+Classe  36 | Expressões:  1
+
+Classe  37 | Expressões:  1
+
+Classe  38 | Expressões:  1
+
+Classe  39 | Expressões:  1
+
+Classe  40 | Expressões:  1
+
+Classe  41 | Expressões:  1
+
+Classe  42 | Expressões:  1
+
+Classe  43 | Expressões:  1
+
+Classe  44 | Expressões:  1
+
+Classe  45 | Expressões:  1
+
+Classe  46 | Expressões:  1
+
+Classe  47 | Expressões:  1
+
+Classe  48 | Expressões:  2
+
+Classe  49 | Expressões:  6
+
+Classe  50 | Expressões:  1
+
+Classe  51 | Expressões:  2
+
+Classe  52 | Expressões:  1
+
+Classe  53 | Expressões:  2
+
+Classe  54 | Expressões:  2
+
+Mínimo: 1
+Máximo: 6
+Média: 1.38
+
+Classes-Total 55
+
+Custo2: 14618.112
+Relacionais: 6
+
+Stage 3
+
+
+Iteração: 0
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  2
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  2
+
+Classe  14 | Expressões:  1
+
+Classe  15 | Expressões:  2
+
+Classe  16 | Expressões:  1
+
+Classe  17 | Expressões:  1
+
+Classe  18 | Expressões:  1
+
+Classe  19 | Expressões:  1
+
+Classe  20 | Expressões:  1
+
+Classe  21 | Expressões:  1
+
+Classe  22 | Expressões:  1
+
+Classe  23 | Expressões:  1
+
+Classe  24 | Expressões:  1
+
+Classe  25 | Expressões:  1
+
+Classe  26 | Expressões:  1
+
+Classe  27 | Expressões:  1
+
+Classe  28 | Expressões:  1
+
+Classe  29 | Expressões:  1
+
+Classe  30 | Expressões:  1
+
+Classe  31 | Expressões:  1
+
+Classe  32 | Expressões:  1
+
+Classe  33 | Expressões:  1
+
+Classe  34 | Expressões:  1
+
+Classe  35 | Expressões:  1
+
+Classe  36 | Expressões:  1
+
+Classe  37 | Expressões:  1
+
+Classe  38 | Expressões:  1
+
+Classe  39 | Expressões:  1
+
+Classe  40 | Expressões:  1
+
+Classe  41 | Expressões:  1
+
+Classe  42 | Expressões:  1
+
+Classe  43 | Expressões:  1
+
+Classe  44 | Expressões:  1
+
+Classe  45 | Expressões:  1
+
+Classe  46 | Expressões:  1
+
+Classe  47 | Expressões:  1
+
+Classe  48 | Expressões:  2
+
+Classe  49 | Expressões:  1
+
+Classe  50 | Expressões:  2
+
+Classe  51 | Expressões:  1
+
+Mínimo: 1
+Máximo: 2
+Média: 1.10
+
+Iteração: 1
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  2
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  2
+
+Classe  14 | Expressões:  1
+
+Classe  15 | Expressões:  2
+
+Classe  16 | Expressões:  1
+
+Classe  17 | Expressões:  1
+
+Classe  18 | Expressões:  1
+
+Classe  19 | Expressões:  1
+
+Classe  20 | Expressões:  1
+
+Classe  21 | Expressões:  1
+
+Classe  22 | Expressões:  1
+
+Classe  23 | Expressões:  1
+
+Classe  24 | Expressões:  1
+
+Classe  25 | Expressões:  1
+
+Classe  26 | Expressões:  1
+
+Classe  27 | Expressões:  1
+
+Classe  28 | Expressões:  1
+
+Classe  29 | Expressões:  1
+
+Classe  30 | Expressões:  1
+
+Classe  31 | Expressões:  1
+
+Classe  32 | Expressões:  1
+
+Classe  33 | Expressões:  1
+
+Classe  34 | Expressões:  1
+
+Classe  35 | Expressões:  1
+
+Classe  36 | Expressões:  1
+
+Classe  37 | Expressões:  1
+
+Classe  38 | Expressões:  1
+
+Classe  39 | Expressões:  1
+
+Classe  40 | Expressões:  1
+
+Classe  41 | Expressões:  1
+
+Classe  42 | Expressões:  1
+
+Classe  43 | Expressões:  1
+
+Classe  44 | Expressões:  1
+
+Classe  45 | Expressões:  1
+
+Classe  46 | Expressões:  1
+
+Classe  47 | Expressões:  1
+
+Classe  48 | Expressões:  2
+
+Classe  49 | Expressões:  1
+
+Classe  50 | Expressões:  2
+
+Classe  51 | Expressões:  1
+
+Mínimo: 1
+Máximo: 2
+Média: 1.10
+
+Iteração: 2
+ 
+Classe   0 | Expressões:  1
+
+Classe   1 | Expressões:  1
+
+Classe   2 | Expressões:  1
+
+Classe   3 | Expressões:  1
+
+Classe   4 | Expressões:  1
+
+Classe   5 | Expressões:  1
+
+Classe   6 | Expressões:  1
+
+Classe   7 | Expressões:  1
+
+Classe   8 | Expressões:  1
+
+Classe   9 | Expressões:  1
+
+Classe  10 | Expressões:  2
+
+Classe  11 | Expressões:  1
+
+Classe  12 | Expressões:  1
+
+Classe  13 | Expressões:  2
+
+Classe  14 | Expressões:  1
+
+Classe  15 | Expressões:  2
+
+Classe  16 | Expressões:  1
+
+Classe  17 | Expressões:  1
+
+Classe  18 | Expressões:  1
+
+Classe  19 | Expressões:  1
+
+Classe  20 | Expressões:  1
+
+Classe  21 | Expressões:  1
+
+Classe  22 | Expressões:  1
+
+Classe  23 | Expressões:  1
+
+Classe  24 | Expressões:  1
+
+Classe  25 | Expressões:  1
+
+Classe  26 | Expressões:  1
+
+Classe  27 | Expressões:  1
+
+Classe  28 | Expressões:  1
+
+Classe  29 | Expressões:  1
+
+Classe  30 | Expressões:  1
+
+Classe  31 | Expressões:  1
+
+Classe  32 | Expressões:  1
+
+Classe  33 | Expressões:  1
+
+Classe  34 | Expressões:  1
+
+Classe  35 | Expressões:  1
+
+Classe  36 | Expressões:  1
+
+Classe  37 | Expressões:  1
+
+Classe  38 | Expressões:  1
+
+Classe  39 | Expressões:  1
+
+Classe  40 | Expressões:  1
+
+Classe  41 | Expressões:  1
+
+Classe  42 | Expressões:  1
+
+Classe  43 | Expressões:  1
+
+Classe  44 | Expressões:  1
+
+Classe  45 | Expressões:  1
+
+Classe  46 | Expressões:  1
+
+Classe  47 | Expressões:  1
+
+Classe  48 | Expressões:  2
+
+Classe  49 | Expressões:  1
+
+Classe  50 | Expressões:  2
+
+Classe  51 | Expressões:  1
+
+Mínimo: 1
+Máximo: 2
+Média: 1.10
+
+Classes-Total 52
+
+Custo3: 14618.112
+Relacionais: 6
+
+
+Resultados guardados em 'src/planner/outputs/relational_expressions_56.csv'
+created
+created
+created
+created
+created
+created
+created
+created
++--------+
+| 150000 |
++--------+
++----+
+| 25 |
++----+
++---------+
+| 1500000 |
++---------+
++--------+
+| 200000 |
++--------+
++--------+
+| 800000 |
++--------+
++---+
+| 5 |
++---+
++-------+
+| 10000 |
++-------+
++---------+
+| 6001215 |
++---------+
++---+---+-------------+-----------------+-------------------+---------------------+--------------------------------+--------------------------------+--------------------------------+---------+
+| A | F | 37734107.00 | 56586554400.73  | 53758257134.8700  | 55909065222.827692  | 25.522005853257337031693758442 | 38273.129734621672202709109884 | 0.0499852958383976116221043995 | 1478493 |
+| N | F | 991417.00   | 1487504710.38   | 1413082168.0541   | 1469649223.194375   | 25.516471920522983476604725382 | 38284.467760848303906933649045 | 0.0500934266742162969063674268 | 38854   |
+| N | O | 75283683.00 | 112909876769.66 | 107265890064.7416 | 111560462484.162066 | 25.500840389078803497319290943 | 38245.960228243034695434326354 | 0.0499965957637073860749460403 | 2952204 |
+| R | F | 37719753.00 | 56568041380.90  | 53741292684.6040  | 55889619119.831932  | 25.505793612690770655973817847 | 38250.85462609965717067761196  | 0.0500094058301270564687903602 | 1478870 |
++---+---+-------------+-----------------+-------------------+---------------------+--------------------------------+--------------------------------+--------------------------------+---------+
+in 10.645s (11s)
+[?2004h[K> [2C[?2004l
+Exited
