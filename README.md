@@ -2,6 +2,10 @@
 
 -- SQL Optimizers Analysis --
 
+**TODO** 
+- Expression groups seem somewhat too similar, something might be inconsistent: check visit_and_enumerate_alternatives() method.
+
+**DONE**
 - We managed to add prints to see how many groups of equivalent expressions exist and how many expressions exist within these groups.
 - We managed to add prints to distinguish between relational expressions and others.
 - It can now write to file the number of relational expressions that exist per optimization phase.
