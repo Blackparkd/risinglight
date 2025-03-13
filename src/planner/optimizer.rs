@@ -108,35 +108,11 @@ fn visit_and_enumerate_alternatives(egraph: &EGraph) -> (usize, usize, usize, f6
         0.0
     };
 
-    /*println!("Mínimo: {}", min_nodes);
-    println!("Máximo: {}", max_nodes);
-    println!("Média: {:.2}", avg_nodes);*/
+    //println!("Mínimo: {}", min_nodes);
+    //println!("Máximo: {}", max_nodes);
+    //println!("Média: {:.2}", avg_nodes);
 
     (classes_eq, min_nodes, max_nodes, avg_nodes)
-}
-
-
-
-/// Função para garantir que a pasta exista antes de criar o ficheiro
-fn ensure_directory_exists(file_path: &str) -> Result<(), Box<dyn Error>> {
-    if let Some(parent) = Path::new(file_path).parent() {
-        create_dir_all(parent)?;  // Cria o diretório se não existir
-    }
-    Ok(())
-}
-
-/// Função para escrever o cabeçalho do CSV
-fn write_csv_header(file_path: &str) -> Result<(), Box<dyn Error>> {
-    let file = OpenOptions::new()
-        .write(true)
-        .create(true)
-        .truncate(true)
-        .open(file_path)?;
-    let mut wtr = Writer::from_writer(file);
-
-    wtr.write_record(&["Stage", "Custo", "Relacionais", "Classes_Total", "Min", "Max", "Media"])?;
-    wtr.flush()?;
-    Ok(())
 }
 
 /// Função para armazenar os dados no CSV
@@ -150,32 +126,46 @@ fn save_to_csv(
     media: f64,
     base_name: &str
 ) -> Result<String, Box<dyn Error>> {
-    ensure_directory_exists(base_name)?;
-
-    // Se o arquivo não existe, escreve o cabeçalho
-    if !Path::new(base_name).exists() {
-        write_csv_header(base_name)?;
+    // Use absolute path
+    let abs_path = std::env::current_dir()?.join(base_name);
+    let abs_path_str = abs_path.to_str().ok_or("Invalid path")?;
+    
+    // Ensure directory exists
+    if let Some(parent) = abs_path.parent() {
+        create_dir_all(parent)?;
     }
 
-    let file = OpenOptions::new()
-        .append(true)
-        .create(true)
-        .open(base_name)?;
-    let mut wtr = Writer::from_writer(file);
+    // Create or append to file with explicit drop
+    {
+        let file = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .append(true)
+            .open(&abs_path)?;
+        
+        let mut wtr = Writer::from_writer(file);
 
-    // Escreve os dados em uma única linha
-    wtr.write_record(&[
-        stage.to_string(),
-        custo.to_string(),
-        relacionais.to_string(),
-        classes_total.to_string(),
-        min.to_string(),
-        max.to_string(),
-        format!("{:.2}", media)
-    ])?;
-    wtr.flush()?;
+        // Write header if file is empty
+        if abs_path.metadata()?.len() == 0 {
+            wtr.write_record(&["Stage", "Custo", "Relacionais", "Classes_Total", "Min", "Max", "Media"])?;
+        }
 
-    Ok(base_name.to_string())
+        // Write data
+        wtr.write_record(&[
+            stage.to_string(),
+            custo.to_string(),
+            relacionais.to_string(),
+            classes_total.to_string(),
+            min.to_string(),
+            max.to_string(),
+            format!("{:.2}", media)
+        ])?;
+        
+        // Explicit flush and drop
+        wtr.flush()?;
+    } // File handle is explicitly dropped here
+
+    Ok(abs_path_str.to_string())
 }
 
 // Função para identificar operadores relacionais e contar
@@ -194,7 +184,7 @@ fn detail_expr(expr: &RecExpr) -> usize {
             }
         }
     }
-    //println!("Relacionais: {}", counter);
+    println!("Relacionais: {}", counter);
 
     counter
 }
@@ -236,9 +226,6 @@ impl Optimizer {
             create_dir_all(parent).expect("Failed to create output directory");
         }
 
-        //println!("Ficheiro de entrada: {}", file_path);
-        //println!("Ficheiro de saída: {}", output_file);
-
         // 0. stage inicial (pré-otimização)
         let mut egraph = EGraph::new(self.analysis.clone());
         egraph.add_expr(&expr);
@@ -261,59 +248,15 @@ impl Optimizer {
 
         // 1. pushdown apply 
         println!("\nStage 1\n");
-        self.optimize_stage(&mut expr, &mut cost, STAGE1_RULES.iter(), 2, 6);
-        println!("Custo1: {}", cost);
-        let relacionais = detail_expr(&expr);
-        let (classes_eq, min_nodes, max_nodes, avg_nodes) = visit_and_enumerate_alternatives(&egraph);
-        println!("Classes-Total {}\n", classes_eq);
-        save_to_csv(
-            "1",
-            cost,
-            relacionais,
-            classes_eq,
-            min_nodes,
-            max_nodes,
-            avg_nodes,
-            &output_file,
-        ).expect("Falha ao salvar no CSV");
-
+        self.optimize_stage(&mut expr, &mut cost, STAGE1_RULES.iter(), 2, 6, "1", &output_file);
 
         // 2. pushdown predicate and projection
         println!("\nStage 2\n");
-        self.optimize_stage(&mut expr, &mut cost, STAGE2_RULES.iter(), 4, 6);
-        println!("Custo2: {}", cost);
-        let relacionais = detail_expr(&expr);
-        let (classes_eq, min_nodes, max_nodes, avg_nodes) = visit_and_enumerate_alternatives(&egraph);
-        println!("Classes-Total {}\n", classes_eq);
-        save_to_csv(
-            "2",
-            cost,
-            relacionais,
-            classes_eq,
-            min_nodes,
-            max_nodes,
-            avg_nodes,
-            &output_file,
-        ).expect("Falha ao salvar no CSV");
-
+        self.optimize_stage(&mut expr, &mut cost, STAGE2_RULES.iter(), 4, 6, "2", &output_file);
 
         // 3. join reorder and hashjoin
         println!("\nStage 3\n");
-        self.optimize_stage(&mut expr, &mut cost, STAGE3_RULES.iter(), 3, 8);
-        println!("Custo3: {}", cost);
-        let relacionais = detail_expr(&expr);
-        let (classes_eq, min_nodes, max_nodes, avg_nodes) = visit_and_enumerate_alternatives(&egraph);
-        println!("Classes-Total {}\n", classes_eq);
-        save_to_csv(
-            "3",
-            cost,
-            relacionais,
-            classes_eq,
-            min_nodes,
-            max_nodes,
-            avg_nodes,
-            &output_file,
-        ).expect("Falha ao salvar no CSV");
+        self.optimize_stage(&mut expr, &mut cost, STAGE3_RULES.iter(), 3, 8, "3", &output_file);
 
         println!("\n\nResultados guardados em '{}'", &output_file);
 
@@ -331,14 +274,15 @@ impl Optimizer {
         rules: impl IntoIterator<Item = &'a Rewrite> + Clone,
         iteration: usize,
         iter_limit: usize,
+        stage: &str,
+        output_file: &str,
     ) {
         for _i in 0..iteration {
-            //println!("\nIteração: {}\n ", i);
             let runner = egg::Runner::<_, _, ()>::new(self.analysis.clone())
                 .with_expr(expr)
                 .with_iter_limit(iter_limit)
                 .run(rules.clone());
-                        
+                
             let cost_fn = cost::CostFn {
                 egraph: &runner.egraph,
             };
@@ -347,6 +291,26 @@ impl Optimizer {
             (cost0, *expr) = extractor.find_best(runner.roots[0]);
             
             *cost = cost0;
+
+            // Calculate min, max, and average nodes per class
+            let (classes_eq, min_nodes, max_nodes, avg_nodes) = visit_and_enumerate_alternatives(&runner.egraph);
+            /*println!("Classes-Total: {}", classes_eq);
+            println!("Min Nodes: {}", min_nodes);
+            println!("Max Nodes: {}", max_nodes);
+            println!("Avg Nodes: {:.2}", avg_nodes);*/
+
+            // Save to CSV
+            let relacionais = detail_expr(expr);
+            save_to_csv(
+                stage,
+                *cost,
+                relacionais,
+                classes_eq,
+                min_nodes,
+                max_nodes,
+                avg_nodes,
+                output_file,
+            ).expect("Falha ao salvar no CSV");
         }
     }
 
