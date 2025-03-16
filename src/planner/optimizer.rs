@@ -20,6 +20,13 @@ use crate::catalog::RootCatalogRef;
 use crate::planner::EGraph;
 use std::collections::HashMap;
 
+#[derive(Debug)]
+struct ClassInfo {
+    class_id: usize,
+    node_count: usize,
+    nodes: Vec<String>
+}
+
 /// Plan optimizer.
 #[derive(Clone)]
 pub struct Optimizer {
@@ -64,35 +71,33 @@ fn format_enode(enode: &Expr) -> String {
 
 
 // Função para visitar e enumerar as alternativas no E-Graph
-fn visit_and_enumerate_alternatives(egraph: &EGraph) -> (usize, usize, usize, f64) {
-
-    // Itera sobre todas as classes de equivalência no E-Graph
+fn visit_and_enumerate_alternatives(egraph: &EGraph) -> (usize, usize, usize, f64, Vec<ClassInfo>) {
     let mut classes_eq = 0;
-    let mut num_nodes;
-    let mut class_nodes_map: HashMap<usize, Vec<String>> = HashMap::new();
+    let mut class_infos = Vec::new();
 
     for (class_id, eclass) in egraph.classes().enumerate() {
         classes_eq += 1;
-        num_nodes = 0;
         let mut nodes = Vec::new();
         
-        // Itera sobre todos os nós na classe de equivalência
+        // Collect nodes in this class
         for (_node_id, enode) in eclass.nodes.iter().enumerate() {
-            num_nodes += 1;
             nodes.push(format!("{:?}", enode));
         }
         
-        class_nodes_map.insert(class_id, nodes);
-        //println!("Classe {:>3} | Expressões: {:>2}\n", class_id, num_nodes);
+        class_infos.push(ClassInfo {
+            class_id,
+            node_count: nodes.len(),
+            nodes,
+        });
     }
 
-    // Calcular o valor mínimo, máximo e médio de expressões por classe
+    // Calculate statistics as before
     let mut min_nodes = usize::MAX;
     let mut max_nodes = usize::MIN;
     let mut total_nodes = 0;
 
-    for nodes in class_nodes_map.values() {
-        let count = nodes.len();
+    for info in &class_infos {
+        let count = info.node_count;
         if count < min_nodes {
             min_nodes = count;
         }
@@ -108,11 +113,7 @@ fn visit_and_enumerate_alternatives(egraph: &EGraph) -> (usize, usize, usize, f6
         0.0
     };
 
-    //println!("Mínimo: {}", min_nodes);
-    //println!("Máximo: {}", max_nodes);
-    //println!("Média: {:.2}", avg_nodes);
-
-    (classes_eq, min_nodes, max_nodes, avg_nodes)
+    (classes_eq, min_nodes, max_nodes, avg_nodes, class_infos)
 }
 
 /// Função para armazenar os dados no CSV
@@ -189,6 +190,61 @@ fn detail_expr(expr: &RecExpr) -> usize {
     counter
 }
 
+fn save_class_details(
+    stage: &str,
+    class_infos: &[ClassInfo],
+    base_name: &str
+) -> Result<String, Box<dyn Error>> {
+    // Get the base filename without path and extension
+    let base_filename = Path::new(base_name)
+        .file_name()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .trim_end_matches(".csv")
+        .to_string();
+    
+    // Extract query number (assuming filename format like "q1_data")
+    let query_dir = if let Some(query_num) = base_filename.split('_').next() {
+        query_num
+    } else {
+        "unknown_query"
+    };
+    
+    // Create output directory path for this specific query
+    let output_dir = Path::new("src/planner/outputs/data_classes").join(query_dir);
+    
+    // Ensure directory exists
+    create_dir_all(&output_dir)?;
+    
+    // Create the new file path in the query-specific directory
+    let detailed_file = output_dir.join(format!("stage_{}_classes.csv", stage));
+
+    println!("Saving class details to: {}", detailed_file.display());
+
+    let file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(&detailed_file)?;
+    
+    let mut wtr = Writer::from_writer(file);
+
+    // Write header
+    wtr.write_record(&["Stage", "Class_ID", "Node_Count", "Nodes"])?;
+
+    // Write data for each class
+    for info in class_infos {
+        wtr.write_record(&[
+            stage.to_string(),
+            info.class_id.to_string(),
+            info.node_count.to_string(),
+            info.nodes.join("; ")
+        ])?;
+    }
+
+    wtr.flush()?;
+    Ok(detailed_file.to_string_lossy().into_owned())
+}
 
 
 impl Optimizer {
@@ -231,7 +287,7 @@ impl Optimizer {
         egraph.add_expr(&expr);
         println!("Stage 0\n");
         let relacionais = detail_expr(&expr);
-        let (classes_eq, min_nodes, max_nodes, avg_nodes) = visit_and_enumerate_alternatives(&egraph);
+        let (classes_eq, min_nodes, max_nodes, avg_nodes, class_infos) = visit_and_enumerate_alternatives(&egraph);
         println!("Classes-Total {}\n", classes_eq);
         println!("\nCustoI: {}", cost);
         
@@ -245,6 +301,8 @@ impl Optimizer {
             avg_nodes,
             &output_file,
         ).expect("Falha ao salvar no CSV");
+
+        save_class_details("0", &class_infos, &output_file).expect("Falha ao salvar detalhes das classes no CSV");
 
         // 1. pushdown apply 
         println!("\nStage 1\n");
@@ -292,14 +350,11 @@ impl Optimizer {
             
             *cost = cost0;
 
-            // Calculate min, max, and average nodes per class
-            let (classes_eq, min_nodes, max_nodes, avg_nodes) = visit_and_enumerate_alternatives(&runner.egraph);
-            /*println!("Classes-Total: {}", classes_eq);
-            println!("Min Nodes: {}", min_nodes);
-            println!("Max Nodes: {}", max_nodes);
-            println!("Avg Nodes: {:.2}", avg_nodes);*/
+            // Get detailed class information
+            let (classes_eq, min_nodes, max_nodes, avg_nodes, class_infos) = 
+                visit_and_enumerate_alternatives(&runner.egraph);
 
-            // Save to CSV
+            // Save regular statistics
             let relacionais = detail_expr(expr);
             save_to_csv(
                 stage,
@@ -311,6 +366,13 @@ impl Optimizer {
                 avg_nodes,
                 output_file,
             ).expect("Falha ao salvar no CSV");
+
+            // Save detailed class information
+            save_class_details(
+                stage,
+                &class_infos,
+                output_file,
+            ).expect("Falha ao salvar detalhes das classes");
         }
     }
 
