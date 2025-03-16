@@ -4,6 +4,8 @@
 
 **TODO** 
 - Detail the node information on each group to better understand the shifts in every stage.
+- Remove the information in every iteration of every stage, and instead only save information after last stage.
+- We are probably adding information to the file that we don't need.
 
 **DONE**
 - We managed to add prints to see how many groups of equivalent expressions exist and how many expressions exist within these groups.
@@ -32,6 +34,24 @@ Stage,Custo,Relacionais,Classes_Total,Min,Max,Media
 [![docs.rs](https://img.shields.io/badge/docs.rs-risinglight-green)](https://docs.rs/risinglight)
 
 ![RisingLight Logo](docs/risinglightdb-banner.png)
+
+- We have information about each class and respective nodes. File structure is as follows:
+
+```csv 
+Stage,Class_ID,Node_Count,Nodes
+3,0,1,Constant(Bool(true))
+3,1,1,Column($4.3(1))
+3,2,1,Column($4.1(1))
+3,3,1,Column($4.0(1))
+3,4,1,"List([3, 2, 1])"
+3,5,1,Table($4)
+3,6,3,"Scan([5, 4, 0]); Proj([4, 6]); Filter([0, 6])"
+3,7,1,Column($3.3(1))
+3,8,1,Column($3.0(1))
+3,9,1,"List([8, 7])"
+3,10,1,Table($3)
+3,11,3,"Scan([10, 9, 0]); Proj([9, 11]); Filter([0, 11])"
+```
 
 RisingLight is an OLAP database system for educational purpose. It is still in rapid development, and should not be used in production.
 
