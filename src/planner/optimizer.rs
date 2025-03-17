@@ -18,7 +18,6 @@ use std::io::{BufRead, BufReader};
 use super::*;
 use crate::catalog::RootCatalogRef;
 use crate::planner::EGraph;
-use std::collections::HashMap;
 
 #[derive(Debug)]
 struct ClassInfo {
@@ -335,7 +334,7 @@ impl Optimizer {
         stage: &str,
         output_file: &str,
     ) {
-        for _i in 0..iteration {
+        for i in 0..iteration {
             let runner = egg::Runner::<_, _, ()>::new(self.analysis.clone())
                 .with_expr(expr)
                 .with_iter_limit(iter_limit)
@@ -354,25 +353,28 @@ impl Optimizer {
             let (classes_eq, min_nodes, max_nodes, avg_nodes, class_infos) = 
                 visit_and_enumerate_alternatives(&runner.egraph);
 
-            // Save regular statistics
-            let relacionais = detail_expr(expr);
-            save_to_csv(
-                stage,
-                *cost,
-                relacionais,
-                classes_eq,
-                min_nodes,
-                max_nodes,
-                avg_nodes,
-                output_file,
-            ).expect("Falha ao salvar no CSV");
+            // Apenas salva os dados na última iteração
+            if i == iteration - 1 {
+                // Save regular statistics
+                let relacionais = detail_expr(expr);
+                save_to_csv(
+                    stage,
+                    *cost,
+                    relacionais,
+                    classes_eq,
+                    min_nodes,
+                    max_nodes,
+                    avg_nodes,
+                    output_file,
+                ).expect("Falha ao salvar no CSV");
 
-            // Save detailed class information
-            save_class_details(
-                stage,
-                &class_infos,
-                output_file,
-            ).expect("Falha ao salvar detalhes das classes");
+                // Save detailed class information
+                save_class_details(
+                    stage,
+                    &class_infos,
+                    output_file,
+                ).expect("Falha ao salvar detalhes das classes");
+            }
         }
     }
 
