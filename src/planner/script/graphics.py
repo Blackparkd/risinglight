@@ -62,7 +62,7 @@ def create_graph(file_path):
     ax.set_facecolor('#2e353b')  # Subplot background color
 
     # Create bars for each metric
-    colors = ['#FF8C00', '#008B8B', '#FF4500', '#D3D3D3', '#9370DB', '#20B2AA']
+    colors = ['#FF8C00', '#72266D', '#FF4500', '#D3D3D3', '#9370DB', '#20B2AA']
     for (attribute, measurement), color in zip(metrics.items(), colors):
         offset = width * multiplier
         rects = ax.bar(x + offset, measurement, width, label=attribute, color=color)

@@ -83,9 +83,12 @@ def create_histogram(query_folder, stage):
     # plt.show() -> Para já so quero guardar a imagem
 
     # Create scatter plot
-    fig, ax = plt.subplots(figsize=(15, 8), layout='constrained')
+    fig, ax = plt.subplots(figsize=(20, 10), layout='constrained')
     fig.patch.set_facecolor('#478ac9')
     ax.set_facecolor('#2e353b')
+
+    # Set logarithmic scale for better distribution visibility
+    ax.set_yscale('log')
 
     # Create scatter plot with connected lines
     ax.plot(class_ids, node_counts, 
@@ -96,25 +99,41 @@ def create_histogram(query_folder, stage):
     ax.scatter(class_ids, node_counts,
               color='white',
               alpha=0.7,
-              s=50)  # size of points
+              s=100)  # Increased point size
 
-    # Improve x-axis readability
+    # Improve x-axis readability for many classes
     if len(class_ids) > 50:
-        plt.xticks(rotation=45)
-        # Show fewer x-axis labels when there are many points
-        ax.xaxis.set_major_locator(plt.MaxNLocator(20))
+        step = len(class_ids) // 20  # Show around 20 labels
+        plt.xticks(class_ids[::step], rotation=45)
 
     # Add grid for better readability
-    ax.grid(True, color='white', alpha=0.1)
+    ax.grid(True, color='white', alpha=0.2, which='both')
 
     # Configure plot
-    ax.set_xlabel('Class ID', color='white')
-    ax.set_ylabel('Number of Nodes', color='white')
+    ax.set_xlabel('Class ID', color='white', fontsize=14)
+    ax.set_ylabel('Number of Nodes (log scale)', color='white', fontsize=14)
     ax.set_title(f'Distribution of Nodes per Class\nQuery {query_folder}, Stage {stage}',
-                 color='white', pad=20)
-    ax.tick_params(colors='white')
+                 color='white', pad=20, fontsize=16)
+    ax.tick_params(colors='white', labelsize=12)
+    
     for spine in ax.spines.values():
         spine.set_color('white')
+        spine.set_linewidth(2)
+
+    # Add statistics box with more details
+    stats_text = (f'Total Classes: {len(class_ids):,}\n'
+                 f'Min Nodes: {min(node_counts):,}\n'
+                 f'Max Nodes: {max(node_counts):,}\n'
+                 f'Median Nodes: {np.median(node_counts):,.0f}\n'
+                 f'Avg Nodes: {np.mean(node_counts):.2f}')
+    
+    plt.text(0.95, 0.95, stats_text,
+             transform=ax.transAxes,
+             verticalalignment='top',
+             horizontalalignment='right',
+             bbox=dict(facecolor='#2e353b', edgecolor='#478ac9'),
+             color='white',
+             fontsize=12)
 
     # Save plot
     query_output_dir = os.path.join(output_dir, query_folder)
@@ -130,6 +149,8 @@ def create_histogram(query_folder, stage):
                 dpi=300)
     plt.close()
     print(f"✅ Plot saved as: {output_path}")
+
+    
 
 
 ## MAIN ##

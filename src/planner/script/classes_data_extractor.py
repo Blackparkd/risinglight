@@ -6,6 +6,7 @@ import sys
 
 def extract_all_stages_classes(query_folder):
     output_dir = "src/planner/outputs/filtered_class_data/query_" + query_folder
+    
     os.makedirs(output_dir, exist_ok=True)
 
     for stage in range(4):  # 0 to 3
