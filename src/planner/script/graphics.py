@@ -100,7 +100,7 @@ def create_graph(file_path):
     print(f"✅ Graph saved as: {output_path}")
     
     # Show the plot
-    plt.show()
+    #plt.show() -> Para já so quero guardar a imagem
 
 def main():
     if len(sys.argv) <= 1:

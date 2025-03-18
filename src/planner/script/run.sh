@@ -12,8 +12,9 @@ while true; do
     echo "1. Execute Query"
     echo "2. Extract Query Data"
     echo "3. Generate Histogram"
-    echo "4. Full Analysis (Execute + Extract + Histogram)"
-    echo "0. Exit"
+    echo "4. Extract Classes Data"
+    echo "5. Generate Classes Stem Plot"
+    echo "6. Full Analysis (Execute + Extract + Histogram)"
     echo "========================================"
 
     read -p "Choose an option: " option
@@ -139,6 +140,64 @@ while true; do
             ;;
 
         4)
+            echo -e "\n${GREEN}=== Extract Classes Data ===${NC}"
+            echo "Select query number (1-10):"
+            echo "1. Query 1"
+            echo "2. Query 2"
+            echo "3. Query 3"
+            echo "4. Query 4"
+            echo "5. Query 5"
+            echo "6. Query 6"
+            echo "7. Query 7"
+            echo "8. Query 8"
+            echo "9. Query 9"
+            echo "10. Query 10"
+            echo "0. Back"
+
+            read -p "Select query: " query_choice
+            
+            if [ "$query_choice" -ge 1 ] && [ "$query_choice" -le 10 ]; then
+                input_file="src/planner/outputs/query_data/q${query_choice}_data.csv"
+                python3 src/planner/script/classes_data_extractor.py "$input_file"
+                echo -e "${GREEN}Classes data extracted!${NC}"
+            elif [ "$query_choice" -eq 0 ]; then
+                continue
+            else
+                echo -e "${RED}Invalid query number!${NC}"
+            fi
+            ;;        
+        
+        5)
+            echo -e "\n${GREEN}=== Generate Classes Plots ===${NC}"
+            echo "Select query number (1-10):"
+            echo "1. Query 1"
+            echo "2. Query 2"
+            echo "3. Query 3"
+            echo "4. Query 4"
+            echo "5. Query 5"
+            echo "6. Query 6"
+            echo "7. Query 7"
+            echo "8. Query 8"
+            echo "9. Query 9"
+            echo "10. Query 10"
+            echo "0. Back"
+            
+            read -p "Select query: " query_choice
+            
+            if [ "$query_choice" -ge 1 ] && [ "$query_choice" -le 10 ]; then
+                echo -e "\n${GREEN}Generating classes plots for all stages...${NC}"
+                for stage in {0..3}; do
+                    echo -e "${BLUE}Stage ${stage}...${NC}"
+                    python3 src/planner/script/classes_histogram.py "q${query_choice}" "$stage"
+                done
+            elif [ "$query_choice" -eq 0 ]; then
+                continue
+            else
+                echo -e "${RED}Invalid query number!${NC}"
+            fi
+            ;;
+
+        6)
             echo -e "\n${GREEN}=== Full Analysis ===${NC}"
             echo "Select query number (1-10):"
             echo "1. Query 1"
@@ -153,30 +212,37 @@ while true; do
             echo "10. Query 10"
             echo "0. Back"
             
-            read -p "Select query: " query_num
+            read -p "Select query: " query_choice
             
-            if [ "$query_num" -ge 1 ] && [ "$query_num" -le 10 ]; then
-                # Execute Query
-                echo -e "1. Executing Query $query_num..."
-                cargo run --release -- -f tests/mytests/q${query_num}.sql
+            if [ "$query_choice" -ge 1 ] && [ "$query_choice" -le 10 ]; then
+                echo -e "\n${GREEN}Executing Query ${query_choice}...${NC}"
+                cargo run --release -- -f tests/mytests/q${query_choice}.sql
                 
-                # Extract data
-                echo -e "\n2. Extracting data..."
-                input_file="src/planner/outputs/query_data/q${query_num}_data.csv"
+                echo -e "\n${GREEN}Extracting data...${NC}"
+                input_file="src/planner/outputs/query_data/q${query_choice}_data.csv"
                 python3 src/planner/script/extractor.py "$input_file"
                 
-                # Generate Histogram
-                echo -e "\n3. Generating Histogram..."
-                filtered_file="src/planner/outputs/filtered_query_data/q${query_num}_data_filtered.csv"
+                echo -e "\n${GREEN}Generating histogram...${NC}"
+                filtered_file="src/planner/outputs/filtered_query_data/q${query_choice}_data_filtered.csv"
                 python3 src/planner/script/graphics.py "$filtered_file"
                 
-                echo -e "${GREEN}Full analysis completed!${NC}"
-            elif [ "$query_num" -eq 0 ]; then
+                echo -e "\n${GREEN}Extracting classes data...${NC}"
+                python3 src/planner/script/classes_data_extractor.py "q${query_choice}"
+                
+                echo -e "\n${GREEN}Generating classes plots for all stages...${NC}"
+                for stage in {0..3}; do
+                    echo -e "${BLUE}Stage ${stage}...${NC}"
+                    python3 src/planner/script/classes_histogram.py "q${query_choice}" "$stage"
+                done
+                
+                echo -e "\n${GREEN}Full analysis completed!${NC}"
+            elif [ "$query_choice" -eq 0 ]; then
                 continue
             else
-                echo -e "${RED}Invalid query number! Please select a number between 1 and 10.${NC}"
+                echo -e "${RED}Invalid query number!${NC}"
             fi
             ;;
+
 
         0)
             echo -e "\n${GREEN}Exiting...${NC}"

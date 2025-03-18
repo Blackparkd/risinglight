@@ -4,12 +4,13 @@ import numpy as np
 import sys
 import os
 
+
 def create_histogram(query_folder, stage):
     # Construct input file path
-    input_file = f"src/planner/outputs/data_classes/{query_folder}/stage_{stage}_classes.csv"
+    input_file = f"src/planner/outputs/filtered_class_data/query_{query_folder}/stage{stage}_filtered.csv"
     
     # Create output directory if it doesn't exist
-    output_dir = "src/planner/outputs/graphs/histograms"
+    output_dir = "src/planner/outputs/graphs/node_distribution"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     
@@ -72,17 +73,66 @@ def create_histogram(query_folder, stage):
              color='white')
 
     # Save the plot as PNG file
-    output_path = os.path.join(output_dir, f"query{query_folder}_stage{stage}_histogram.png")
-    plt.savefig(output_path, 
-                bbox_inches='tight',
-                facecolor=fig.get_facecolor(),
-                edgecolor='none',
-                dpi=300)
-    print(f"✅ Histogram saved as: {output_path}")
+    # Create query-specific directory
+    query_output_dir = os.path.join(output_dir, query_folder)
+    if not os.path.exists(query_output_dir):
+        os.makedirs(query_output_dir)
+    
     
     # Show the plot
-    plt.show()
+    # plt.show() -> Para já so quero guardar a imagem
 
+    # Create scatter plot
+    fig, ax = plt.subplots(figsize=(15, 8), layout='constrained')
+    fig.patch.set_facecolor('#478ac9')
+    ax.set_facecolor('#2e353b')
+
+    # Create scatter plot with connected lines
+    ax.plot(class_ids, node_counts, 
+            color='white', 
+            alpha=0.3, 
+            linestyle='-', 
+            linewidth=0.5)
+    ax.scatter(class_ids, node_counts,
+              color='white',
+              alpha=0.7,
+              s=50)  # size of points
+
+    # Improve x-axis readability
+    if len(class_ids) > 50:
+        plt.xticks(rotation=45)
+        # Show fewer x-axis labels when there are many points
+        ax.xaxis.set_major_locator(plt.MaxNLocator(20))
+
+    # Add grid for better readability
+    ax.grid(True, color='white', alpha=0.1)
+
+    # Configure plot
+    ax.set_xlabel('Class ID', color='white')
+    ax.set_ylabel('Number of Nodes', color='white')
+    ax.set_title(f'Distribution of Nodes per Class\nQuery {query_folder}, Stage {stage}',
+                 color='white', pad=20)
+    ax.tick_params(colors='white')
+    for spine in ax.spines.values():
+        spine.set_color('white')
+
+    # Save plot
+    query_output_dir = os.path.join(output_dir, query_folder)
+    if not os.path.exists(query_output_dir):
+        os.makedirs(query_output_dir)
+    
+    output_path = os.path.join(query_output_dir, f"{query_folder}_stage{stage}_histogram.png")
+
+    plt.savefig(output_path, 
+                facecolor=fig.get_facecolor(), 
+                edgecolor='none',
+                bbox_inches='tight',
+                dpi=300)
+    plt.close()
+    print(f"✅ Plot saved as: {output_path}")
+
+
+## MAIN ##
 def main():
     if len(sys.argv) <= 2:
         print("❌ Usage: python3 class_histogram.py <query_folder> <stage>")
