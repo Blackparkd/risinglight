@@ -3,12 +3,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 import os
+from collections import Counter
+
+# utilizar plt.hist para fazer histograma
+# ver tipos de nós mais populares -> apenas para nós relacionais - já se tem a informação no csv
 
 
 def create_histogram(query_folder, stage):
     # Construct input file path
     input_file = f"src/planner/outputs/filtered_class_data/query_{query_folder}/stage{stage}_filtered.csv"
-    
+
     # Create output directory if it doesn't exist
     output_dir = "src/planner/outputs/graphs/node_distribution"
     if not os.path.exists(output_dir):
@@ -30,36 +34,41 @@ def create_histogram(query_folder, stage):
             class_ids.append(int(row["Class_ID"]))
             node_counts.append(int(row["Node_Count"]))
 
+    # Print some statistics
+    # plt.hist(node_counts, len(class_ids)) # 
+    # plt.show()
+
+    node_distribution = Counter(node_counts)
+    min_nodos = min(node_counts)
+    max_nodos = max(node_counts)
+
     # Create histogram
     fig, ax = plt.subplots(figsize=(12, 6), layout='constrained')
 
     # Add background color
-    fig.patch.set_facecolor('#478ac9')  # Graph background color
-    ax.set_facecolor('#2e353b')  # Subplot background color
+    fig.patch.set_facecolor('#478ac9')
+    ax.set_facecolor('#2e353b')
 
-    # Create histogram bars
-    n_bins = min(20, len(set(node_counts)))  # Adjust number of bins based on data
-    counts, bins, patches = ax.hist(node_counts, bins=n_bins, 
-                                  color='#FF8C00', edgecolor='white')
-    
-    # Add value labels on top of each bar
-    for count, patch in zip(counts, patches):
-        if count > 0:  # Only show labels for non-empty bins
-            ax.text(patch.get_x() + patch.get_width()/2., count,
-                   int(count), ha='center', va='bottom', color='white')
+    # Create bar plot
+    ax.bar(node_distribution.keys(), node_distribution.values(), 
+        color='#FF8C00', edgecolor='white')
+
+    # Add value labels on bars
+    for x, y in node_distribution.items():
+        ax.text(x, y, str(y), ha='center', va='bottom', color='white')
 
     # Configure labels and title
-    ax.set_xlabel('Number of Nodes per Class', color='white')
-    ax.set_ylabel('Number of Classes', color='white')
-    ax.set_title(f'Distribution of Nodes per Class - Query {query_folder}, Stage {stage}',
-                 color='white', pad=20)
+    ax.set_xlabel('Nodes per class', color='white')
+    ax.set_ylabel('Classes', color='white')
+    ax.set_title(f'Node distribution - Query {query_folder}, Stage {stage}',
+                color='white', pad=20)
 
     # Style the axes
     ax.tick_params(colors='white')
     for spine in ax.spines.values():
         spine.set_color('white')
 
-    # Add some statistics as text
+    # Add statistics text
     stats_text = (f'Total Classes: {len(class_ids)}\n'
                  f'Min Nodes: {min(node_counts)}\n'
                  f'Max Nodes: {max(node_counts)}\n'
@@ -72,70 +81,7 @@ def create_histogram(query_folder, stage):
              bbox=dict(facecolor='#2e353b', edgecolor='#478ac9'),
              color='white')
 
-    # Save the plot as PNG file
-    # Create query-specific directory
-    query_output_dir = os.path.join(output_dir, query_folder)
-    if not os.path.exists(query_output_dir):
-        os.makedirs(query_output_dir)
-    
-    
-    # Show the plot
-    # plt.show() -> Para já so quero guardar a imagem
-
-    # Create scatter plot
-    fig, ax = plt.subplots(figsize=(20, 10), layout='constrained')
-    fig.patch.set_facecolor('#478ac9')
-    ax.set_facecolor('#2e353b')
-
-    # Set logarithmic scale for better distribution visibility
-    ax.set_yscale('log')
-
-    # Create scatter plot with connected lines
-    ax.plot(class_ids, node_counts, 
-            color='white', 
-            alpha=0.3, 
-            linestyle='-', 
-            linewidth=0.5)
-    ax.scatter(class_ids, node_counts,
-              color='white',
-              alpha=0.7,
-              s=100)  # Increased point size
-
-    # Improve x-axis readability for many classes
-    if len(class_ids) > 50:
-        step = len(class_ids) // 20  # Show around 20 labels
-        plt.xticks(class_ids[::step], rotation=45)
-
-    # Add grid for better readability
-    ax.grid(True, color='white', alpha=0.2, which='both')
-
-    # Configure plot
-    ax.set_xlabel('Class ID', color='white', fontsize=14)
-    ax.set_ylabel('Number of Nodes (log scale)', color='white', fontsize=14)
-    ax.set_title(f'Distribution of Nodes per Class\nQuery {query_folder}, Stage {stage}',
-                 color='white', pad=20, fontsize=16)
-    ax.tick_params(colors='white', labelsize=12)
-    
-    for spine in ax.spines.values():
-        spine.set_color('white')
-        spine.set_linewidth(2)
-
-    # Add statistics box with more details
-    stats_text = (f'Total Classes: {len(class_ids):,}\n'
-                 f'Min Nodes: {min(node_counts):,}\n'
-                 f'Max Nodes: {max(node_counts):,}\n'
-                 f'Median Nodes: {np.median(node_counts):,.0f}\n'
-                 f'Avg Nodes: {np.mean(node_counts):.2f}')
-    
-    plt.text(0.95, 0.95, stats_text,
-             transform=ax.transAxes,
-             verticalalignment='top',
-             horizontalalignment='right',
-             bbox=dict(facecolor='#2e353b', edgecolor='#478ac9'),
-             color='white',
-             fontsize=12)
-
-    # Save plot
+    # Save the plot
     query_output_dir = os.path.join(output_dir, query_folder)
     if not os.path.exists(query_output_dir):
         os.makedirs(query_output_dir)
@@ -147,11 +93,10 @@ def create_histogram(query_folder, stage):
                 edgecolor='none',
                 bbox_inches='tight',
                 dpi=300)
+    
     plt.close()
     print(f"✅ Plot saved as: {output_path}")
-
     
-
 
 ## MAIN ##
 def main():
