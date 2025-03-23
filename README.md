@@ -44,7 +44,8 @@ Stage,Class_ID,Node_Count,Nodes
 3,11,3,"Scan([10, 9, 0]); Proj([9, 11]); Filter([0, 11])"
 ```
 
-
+- We have histograms for every stage with node information. Histogram as follows:
+![Histogram](src/planner/outputs/graphs/node_distribution/q4/q4_stage3_histogram.png)
 ----------------------------------
 
 
