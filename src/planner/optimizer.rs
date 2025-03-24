@@ -39,6 +39,7 @@ pub struct Config {
     pub table_is_sorted_by_primary_key: bool,
 }
 
+// =============================== MY HELPERS - START ==================================================== //
 
 // Função para formatar um nó de forma legível
 fn format_enode(enode: &Expr) -> String {
@@ -90,7 +91,7 @@ fn visit_and_enumerate_alternatives(egraph: &EGraph) -> (usize, usize, usize, f6
         });
     }
 
-    // Calculate statistics as before
+    // Calcular estatísticas
     let mut min_nodes = usize::MAX;
     let mut max_nodes = usize::MIN;
     let mut total_nodes = 0;
@@ -246,6 +247,10 @@ fn save_class_details(
 }
 
 
+
+
+// =============================== MY HELPERS - END ==================================================== //
+
 impl Optimizer {
     pub fn new(catalog: RootCatalogRef, stat: Statistics, config: Config) -> Self {
         Self {
@@ -353,7 +358,7 @@ impl Optimizer {
             let (classes_eq, min_nodes, max_nodes, avg_nodes, class_infos) = 
                 visit_and_enumerate_alternatives(&runner.egraph);
 
-            // Apenas salva os dados na última iteração
+            // Apenas guarda os dados na última iteração
             if i == iteration - 1 {
                 // Save regular statistics
                 let relacionais = detail_expr(expr);
