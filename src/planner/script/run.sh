@@ -8,14 +8,15 @@ NC='\033[0m' # No Color
 
 while true; do
     clear
-    echo -e "${BLUE}====== RisingLight Query Analyzer ======${NC}"
-    echo "1. Execute Query"
-    echo "2. Extract Query Data"
-    echo "3. Generate Histogram"
-    echo "4. Extract Classes Data"
-    echo "5. Generate Classes Stem Plot"
-    echo "6. Full Analysis (Execute + Extract + Histogram)"
-    echo "========================================"
+    echo -e "${BLUE}RisingLight Query Analyzer =======================${NC}"
+    echo -e "${GREEN}1.${NC} Execute Query"
+    echo -e "${GREEN}2.${NC} Extract Query Data"
+    echo -e "${GREEN}3.${NC} Generate Histogram"
+    echo -e "${GREEN}4.${NC} Extract Classes Data"
+    echo -e "${GREEN}5.${NC} Generate Classes Stem Plot"
+    echo -e "${GREEN}6.${NC} Full Analysis (Execute + Extract + Histogram)"
+    echo -e "${GREEN}0.${NC} Exit"
+    echo -e "${BLUE}================================================== ${NC}"
 
     read -p "Choose an option: " option
 
@@ -168,7 +169,7 @@ while true; do
             ;;        
         
         5)
-            echo -e "\n${GREEN}=== Generate Classes Plots ===${NC}"
+            echo -e "\n${GREEN}=== Generate Node Information: Total and Relational ===${NC}"
             echo "Select query number (1-10):"
             echo "1. Query 1"
             echo "2. Query 2"
@@ -185,7 +186,7 @@ while true; do
             read -p "Select query: " query_choice
             
             if [ "$query_choice" -ge 1 ] && [ "$query_choice" -le 10 ]; then
-                echo -e "\n${GREEN}Generating classes plots for all stages...${NC}"
+                echo -e "\n${GREEN}Generating Node information for all stages...${NC}"
                 for stage in {0..3}; do
                     echo -e "${BLUE}Stage ${stage}...${NC}"
                     python3 src/planner/script/classes_histogram.py "q${query_choice}" "$stage"
