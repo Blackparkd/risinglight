@@ -4,9 +4,6 @@
 
 **TODO** 
 - Detail the node information on each group to better understand the shifts in every stage.
-- Remove the information in every iteration of every stage, and instead only save information after last stage.
-- We are probably adding information to the file that we don't need.
-- Check if histogram for classes is being properly generated: cross information with optimizer and the other histogram to be sure.
 
 **DONE**
 - We managed to add prints to see how many groups of equivalent expressions exist and how many expressions exist within these groups.

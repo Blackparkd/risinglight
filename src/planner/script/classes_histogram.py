@@ -42,6 +42,10 @@ def create_histogram(query_folder, stage):
     min_nodos = min(node_counts)
     max_nodos = max(node_counts)
 
+    ##########################################
+    # BAR PLOT START - Node Distribution
+    ##########################################
+    
     # Create histogram
     fig, ax = plt.subplots(figsize=(12, 6), layout='constrained')
 
@@ -81,6 +85,10 @@ def create_histogram(query_folder, stage):
              bbox=dict(facecolor='#2e353b', edgecolor='#478ac9'),
              color='white')
 
+    ##########################################
+    # BAR PLOT END
+    ##########################################
+
     # Save the plot
     query_output_dir = os.path.join(output_dir, query_folder)
     if not os.path.exists(query_output_dir):
@@ -97,6 +105,15 @@ def create_histogram(query_folder, stage):
     plt.close()
     print(f"✅ Plot saved as: {output_path}")
     
+
+    ##########################################
+    # RELATIONAL FLAGS PLOT START
+    ##########################################
+
+    
+
+
+
 
 ## MAIN ##
 def main():
