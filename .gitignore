@@ -6,6 +6,4 @@
 .gdb_history
 risinglight
 /.DS_Store
-src/planner/outputs/*
-src/planner/outputs
 temp_file_path.txt
