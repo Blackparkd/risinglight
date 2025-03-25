@@ -246,6 +246,82 @@ fn save_class_details(
     Ok(detailed_file.to_string_lossy().into_owned())
 }
 
+fn save_rules_application_data(
+    stage: &str,
+    runner: &egg::Runner<Expr, ExprAnalysis, ()>,  // Passe o runner diretamente
+    output_file_base: &str,
+    iteration_number: usize  // Número da iteração externa
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Extrair o nome da consulta do caminho do arquivo base
+    let path = Path::new(output_file_base);
+    let file_stem = path.file_stem().unwrap_or_default().to_string_lossy();
+    
+    // Criar o diretório para os dados de regras se não existir
+    let output_dir = format!("src/planner/outputs/rules_data/{}", file_stem);
+    create_dir_all(&output_dir)?;
+    
+    // Caminho para o arquivo CSV de saída - incluindo o número da iteração externa
+    let output_path = format!("{}/stage_{}_iter_{}_rules_application.csv", output_dir, stage, iteration_number);
+    
+    // Abrir o arquivo CSV para escrita
+    let file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(&output_path)?;
+    
+    let mut wtr = Writer::from_writer(file);
+    
+    // Escrever cabeçalhos
+    wtr.write_record(&[
+        "Stage", 
+        "External_Iteration",  // Iteração externa (do for i in 0..iteration)
+        "Internal_Iteration",  // Iteração interna (do runner)
+        "Class_Count", 
+        "Node_Count",
+        "Rule_Name", 
+        "Applications"
+    ])?;
+    
+    // Para cada iteração interna, escrever as regras aplicadas
+    for (iter_idx, iter_data) in runner.iterations.iter().enumerate() {
+        // Usar os campos corretos disponíveis no tipo Iteration<()>
+        let class_count = iter_data.egraph_classes; // Alterado de iter_data.egraph.number_of_classes()
+        let node_count = iter_data.egraph_nodes;    // Alterado de iter_data.egraph.total_size()
+        
+        // Para cada regra aplicada nesta iteração
+        for applied in &iter_data.applied {
+            wtr.write_record(&[
+                stage,
+                &iteration_number.to_string(),
+                &iter_idx.to_string(),
+                &class_count.to_string(),
+                &node_count.to_string(),
+                &applied.0.to_string(), // Nome da regra
+                &applied.1.to_string()  // Número de aplicações
+            ])?;
+        }
+        
+        // Se não houver regras aplicadas nesta iteração, ainda registra a iteração
+        if iter_data.applied.is_empty() {
+            wtr.write_record(&[
+                stage,
+                &iteration_number.to_string(),
+                &iter_idx.to_string(),
+                &class_count.to_string(),
+                &node_count.to_string(),
+                "None",
+                "0"
+            ])?;
+        }
+    }
+    
+    // Garantir que os dados sejam gravados
+    wtr.flush()?;
+    
+    println!("✅ Rules application data saved to: {}", output_path);
+    Ok(())
+}
 
 
 
@@ -295,18 +371,11 @@ impl Optimizer {
         println!("Classes-Total {}\n", classes_eq);
         println!("\nCustoI: {}", cost);
         
-        save_to_csv(
-            "0",
-            cost,
-            relacionais,
-            classes_eq,
-            min_nodes,
-            max_nodes,
-            avg_nodes,
-            &output_file,
-        ).expect("Falha ao salvar no CSV");
 
-        save_class_details("0", &class_infos, &output_file).expect("Falha ao salvar detalhes das classes no CSV");
+        //== SAVE ALL DATA ON CSV HERE ==//
+        save_to_csv("0", cost, relacionais, classes_eq, min_nodes, max_nodes, avg_nodes, &output_file).expect("Falha ao guardar no CSV");
+        save_class_details("0", &class_infos, &output_file).expect("Falha ao guardar os detalhes das classes no CSV");
+        //===============================//
 
         // 1. pushdown apply 
         println!("\nStage 1\n");
@@ -320,7 +389,7 @@ impl Optimizer {
         println!("\nStage 3\n");
         self.optimize_stage(&mut expr, &mut cost, STAGE3_RULES.iter(), 3, 8, "3", &output_file);
 
-        println!("\n\nResultados guardados em '{}'", &output_file);
+        println!("\nSaving query information to: '{}'", &output_file);
 
         expr
     }
@@ -353,6 +422,17 @@ impl Optimizer {
             (cost0, *expr) = extractor.find_best(runner.roots[0]);
             
             *cost = cost0;
+
+            println!("=== Regras aplicadas ===");
+            for (iter_idx, iter_data) in runner.iterations.iter().enumerate() {
+                println!("Iteração {}:", iter_idx);
+                for applied in &iter_data.applied {
+                    println!("  Regra: {:?}, Aplicações: {}", applied.0, applied.1);
+                }
+            }
+
+            save_rules_application_data(stage, &runner, output_file, i)
+            .expect("Failed to save rules application data");
 
             // Get detailed class information
             let (classes_eq, min_nodes, max_nodes, avg_nodes, class_infos) = 
