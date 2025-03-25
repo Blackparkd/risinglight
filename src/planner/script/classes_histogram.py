@@ -35,44 +35,62 @@ def create_histogram(query_folder, stage):
             class_ids.append(int(row["Class_ID"]))
             node_counts.append(int(row["Node_Count"]))
 
-    # Print some statistics
-    # plt.hist(node_counts, len(class_ids)) # 
-    # plt.show()
-
-    node_distribution = Counter(node_counts)
     min_nodos = min(node_counts)
     max_nodos = max(node_counts)
 
-    ##########################################
-    # BAR PLOT START - Node Distribution
-    ##########################################
-    
-    # Create histogram
+    # Using plt.hist #
     fig, ax = plt.subplots(figsize=(12, 6), layout='constrained')
-
-    # Add background color
     fig.patch.set_facecolor('#478ac9')
     ax.set_facecolor('#2e353b')
+    
+    # Calculate number of bins - adjust as needed
+    max_bins = min(20, max_nodos - min_nodos + 1)  # Limit bins to 20 or exact number of values
+    
+    # Após calcular bins e antes de criar o histograma
+    # Escolha um mapa de cores vibrante (você pode experimentar diferentes opções)
+    cmap = plt.cm.plasma  # Outras opções: plasma, inferno, magma, cividis, coolwarm
 
-    # Create bar plot
-    ax.bar(node_distribution.keys(), node_distribution.values(), 
-        color='#FF8C00', edgecolor='white')
+    # Create histogram (sem definir a cor aqui)
+    counts, bins, patches = plt.hist(node_counts, bins=max_bins, 
+                                   edgecolor='white', alpha=1.0)
 
-    # Add value labels on bars
-    for x, y in node_distribution.items():
-        ax.text(x, y, str(y), ha='center', va='bottom', color='white')
+    # Apply logarithmic scale to y-axis to make small bars more visible
+    ax.set_yscale('log')
 
+    # Color bars with a gradient based on bin centers
+    bin_centers = 0.5 * (bins[:-1] + bins[1:])
+    # Normalizar os valores para o intervalo [0, 1]
+    norm = plt.Normalize(min_nodos, max_nodos)
+    # Aplicar cores do mapa de cores para cada patch
+    for count, patch, center in zip(counts, patches, bin_centers):
+        color = cmap(norm(center))
+        patch.set_facecolor(color)
+        patch.set_edgecolor('white')
+        # Destacar barras com valores baixos (opcional)
+        if count <= 2:
+            patch.set_linewidth(2)
+    
+    # Add labels on bars
+    for count, center in zip(counts, bin_centers):
+        if count > 0:  # Only label non-empty bars
+            plt.text(center, count * 1.1, f'{int(count)}',  # Position slightly above the bar
+                    ha='center', va='bottom', color='white', fontweight='bold')
+    
     # Configure labels and title
-    ax.set_xlabel('Nodes per class', color='white')
-    ax.set_ylabel('Classes', color='white')
-    ax.set_title(f'Node distribution - Query {query_folder}, Stage {stage}',
-                color='white', pad=20)
-
+    plt.xlabel('Nodes per class', color='white', fontsize=12)
+    plt.ylabel('Number of classes (log scale)', color='white', fontsize=12)  # Updated to indicate log scale
+    plt.title(f'Node distribution - Query {query_folder}, Stage {stage}',
+             color='white', pad=20, fontsize=14)
+    
+    # Add grid for better readability (with logscale, grid is especially helpful)
+    ax.grid(True, color='white', alpha=0.2, linestyle='--', which='both')  # 'both' shows major and minor grid lines
+    
     # Style the axes
-    ax.tick_params(colors='white')
+    ax.tick_params(colors='white', labelsize=12)
     for spine in ax.spines.values():
         spine.set_color('white')
-
+        spine.set_linewidth(2)
+    
     # Add statistics text
     stats_text = (f'Total Classes: {len(class_ids)}\n'
                  f'Min Nodes: {min(node_counts)}\n'
@@ -85,11 +103,7 @@ def create_histogram(query_folder, stage):
              horizontalalignment='right',
              bbox=dict(facecolor='#2e353b', edgecolor='#478ac9'),
              color='white')
-
-    ##########################################
-    # BAR PLOT END
-    ##########################################
-
+             
     # Save the plot
     query_output_dir = os.path.join(output_dir, query_folder)
     if not os.path.exists(query_output_dir):
