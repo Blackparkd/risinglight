@@ -413,26 +413,16 @@ impl Optimizer {
                 .with_expr(expr)
                 .with_iter_limit(iter_limit)
                 .run(rules.clone());
-                
+
             let cost_fn = cost::CostFn {
                 egraph: &runner.egraph,
             };
             let extractor = egg::Extractor::new(&runner.egraph, cost_fn);
-            let cost0;
+            let cost0;        
             (cost0, *expr) = extractor.find_best(runner.roots[0]);
             
             *cost = cost0;
 
-            println!("=== Regras aplicadas ===");
-            for (iter_idx, iter_data) in runner.iterations.iter().enumerate() {
-                println!("Iteração {}:", iter_idx);
-                for applied in &iter_data.applied {
-                    println!("  Regra: {:?}, Aplicações: {}", applied.0, applied.1);
-                }
-            }
-
-            save_rules_application_data(stage, &runner, output_file, i)
-            .expect("Failed to save rules application data");
 
             // Get detailed class information
             let (classes_eq, min_nodes, max_nodes, avg_nodes, class_infos) = 
