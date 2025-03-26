@@ -1,0 +1,5 @@
+Stage,External_Iteration,Internal_Iteration,Class_Count,Node_Count,Rule_Name,Applications
+1,0,0,61,62,limit-null,1
+1,0,0,61,62,filter-true,1
+1,0,1,59,63,None,0
+1,0,2,59,64,None,0
