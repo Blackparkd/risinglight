@@ -870,6 +870,8 @@ dependencies = [
 [[package]]
 name = "egg"
 version = "0.9.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96beaf9d35dbc4686bc86a4ecb851fd6a406f0bf32d9f646b1225a5c5cf5b5d7"
 dependencies = [
  "env_logger",
  "fxhash",
@@ -4113,3 +4115,7 @@ dependencies = [
  "quote",
  "syn 2.0.100",
 ]
+
+[[patch.unused]]
+name = "egg"
+version = "0.10.0"
