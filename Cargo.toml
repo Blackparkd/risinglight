@@ -35,7 +35,7 @@ crc32fast = "1"
 csv = "1"
 dirs = "5"
 downcast-rs = "1"
-egg = { path = "/home/blackparkd/github/egg" }
+egg = { version = "0.9.5", features = ["deterministic"] }
 enum_dispatch = "0.3"
 erased-serde = "0.4"
 futures = { version = "0.3", default-features = false, features = ["alloc"] }
@@ -114,6 +114,7 @@ members = ["proto"]
 
 [patch.crates-io]
 risinglight_proto = { path = "proto" }
+egg = { path = "/home/blackparkd/github/egg-0.9.5" }
 
 [lib]
 name = "risinglight"
