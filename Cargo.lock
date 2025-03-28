@@ -870,7 +870,6 @@ dependencies = [
 [[package]]
 name = "egg"
 version = "0.9.5"
-source = "git+https://github.com/Blackparkd/egg?branch=eggLcc#8e3da2434c3d6c5e120c83f2b2a3770d29480f8f"
 dependencies = [
  "env_logger",
  "fxhash",
