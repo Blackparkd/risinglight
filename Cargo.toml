@@ -114,7 +114,6 @@ members = ["proto"]
 
 [patch.crates-io]
 risinglight_proto = { path = "proto" }
-egg = { path = "/home/blackparkd/github/egg" }
 
 [lib]
 name = "risinglight"
