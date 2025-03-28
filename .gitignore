@@ -7,3 +7,4 @@
 risinglight
 /.DS_Store
 temp_file_path.txt
+/src/planner/outputs/*
