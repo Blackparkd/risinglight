@@ -35,7 +35,8 @@ crc32fast = "1"
 csv = "1"
 dirs = "5"
 downcast-rs = "1"
-egg = { version = "0.9.5", features = ["deterministic"] }
+egg = { git = "https://github.com/Blackparkd/egg", branch = "eggLcc", features = ["deterministic"] }
+
 enum_dispatch = "0.3"
 erased-serde = "0.4"
 futures = { version = "0.3", default-features = false, features = ["alloc"] }
