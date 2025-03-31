@@ -1,0 +1,24 @@
+*.cpp linguist-detectable=true
+*.h linguist-detectable=true
+*.hpp linguist-detectable=true
+*.c linguist-detectable=true
+
+Makefile linguist-vendored=true
+Makefile2 linguist-vendored=true
+*.mk linguist-vendored=true
+*.cmake linguist-vendored=true
+CMakeLists.txt linguist-vendored=true
+*.make linguist-vendored=true
+*.mak linguist-vendored=true
+*.am linguist-vendored=true
+
+*.3d linguist-vendored
+*.json linguist-vendored
+*.xml linguist-vendored
+*.pdf linguist-generated
+*.png linguist-generated
+*.jpg linguist-generated
+*.md linguist-documentation
+*.tex linguist-vendored
+*.bib linguist-vendored
+
