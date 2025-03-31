@@ -10,7 +10,6 @@
 - We managed to add prints to distinguish between relational expressions and others.
 - It can now write to file the number of relational expressions that exist per optimization phase.
 - We have implemented the extraction of relevant information to file. File structure is as follows:
-
 ```csv 
 Stage,Custo,Relacionais,Classes_Total,Min,Max,Media
 0,340282350000000000000000000000000000000,6,61,1,1,1.00
@@ -43,6 +42,10 @@ Stage,Class_ID,Node_Count,Nodes
 
 - We have histograms for every stage with node information. Histogram as follows:
 ![Histogram](src/planner/outputs/graphs/node_distribution/q4/q4_stage3_histogram.png)
+
+- Egg altered to provido more info
+- Histogram for number of merges per stage:
+![Histogram](src/planner/outputs/graphs/egg-merges/q9/q9_merge_counts.png)
 ----------------------------------
 
 
