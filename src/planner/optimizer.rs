@@ -190,6 +190,7 @@ fn detail_expr(expr: &RecExpr) -> usize {
     counter
 }
 
+// Função para salvar detalhes das classes
 fn save_class_details(
     stage: &str,
     class_infos: &[ClassInfo],
@@ -246,6 +247,54 @@ fn save_class_details(
     Ok(detailed_file.to_string_lossy().into_owned())
 }
 
+// Função para salvar o número de merges do Egg
+fn save_egg_merges(
+    stage: &str,
+    merge_count: usize,
+    base_name: &str
+) -> Result<String, Box<dyn Error>> {
+    // Extrair o nome da query do caminho do arquivo base
+    let path = Path::new(base_name);
+    let file_stem = path.file_stem().unwrap_or_default().to_string_lossy();
+    
+    // Criar diretório para os dados de merges se não existir
+    let output_dir = format!("src/planner/outputs/egg-merges/{}", file_stem);
+    create_dir_all(&output_dir)?;
+    
+    // Caminho para o arquivo CSV de saída
+    let output_path = format!("{}/egg_merges.csv", output_dir);
+    
+    // Verificar se o arquivo já existe para determinar se precisa escrever o cabeçalho
+    let file_exists = Path::new(&output_path).exists();
+    
+    // Abrir o arquivo para escrita (append para adicionar novos dados)
+    let file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .append(true)
+        .open(&output_path)?;
+    
+    let mut wtr = Writer::from_writer(file);
+    
+    // Escrever cabeçalho se o arquivo for novo
+    if !file_exists {
+        wtr.write_record(&["Stage", "Merge_Count"])?;
+    }
+    
+    // Escrever dados
+    wtr.write_record(&[
+        stage,
+        &merge_count.to_string()
+    ])?;
+    
+    // Garantir que os dados sejam gravados
+    wtr.flush()?;
+    
+    println!("✅ Egg merge count saved to: {}", output_path);
+    Ok(output_path)
+}
+
+// Função para salvar os dados de aplicação de regras
 fn save_rules_application_data(
     stage: &str,
     runner: &egg::Runner<Expr, ExprAnalysis, ()>,  // Passe o runner diretamente
@@ -375,6 +424,7 @@ impl Optimizer {
         //== SAVE ALL DATA ON CSV HERE ==//
         save_to_csv("0", cost, relacionais, classes_eq, min_nodes, max_nodes, avg_nodes, &output_file).expect("Falha ao guardar no CSV");
         save_class_details("0", &class_infos, &output_file).expect("Falha ao guardar os detalhes das classes no CSV");
+        save_egg_merges("0", egraph.get_merge_count(), &output_file).expect("Falha ao guardar contador de merges no CSV");
         //===============================//
 
         // 1. pushdown apply 
@@ -423,7 +473,6 @@ impl Optimizer {
             
             *cost = cost0;
 
-
             // Get detailed class information
             let (classes_eq, min_nodes, max_nodes, avg_nodes, class_infos) = 
                 visit_and_enumerate_alternatives(&runner.egraph);
@@ -449,6 +498,14 @@ impl Optimizer {
                     &class_infos,
                     output_file,
                 ).expect("Falha ao salvar detalhes das classes");
+
+                // Para ir buscar ao Egg o número de merges para esta última iteration
+                let egg_stats = runner.egraph.get_merge_count();
+                println!("COUNTER MERGES: {}", egg_stats);
+                save_egg_merges(stage, egg_stats, output_file)
+                    .expect("Falha ao guardar contador de merges");
+
+
             }
         }
     }
