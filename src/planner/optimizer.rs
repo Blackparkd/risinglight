@@ -7,6 +7,14 @@
 
 // Já conseguimos distinguir operadores relacionais de outros operadores
 
+// ToDo: Fazer relatório:
+// Acrescentar queries do tpch
+// Falar sobre o optimizer: queries simples
+// Falar sobre o custo: como é que se calcula, o que é que influencia
+// Falar sobre o número de classes de equivalência e o número de expressões equivalentes em cada classe
+// Falar sobre o número de merges do egg
+
+
 use std::sync::LazyLock;
 use egg::CostFunction;
 use csv::Writer;
@@ -294,12 +302,11 @@ fn save_egg_merges(
     Ok(output_path)
 }
 
-// Função para salvar os dados de aplicação de regras
-fn save_rules_application_data(
+// Função para salvar os dados de aplicação de regras (apenas na última iteração)
+fn save_rules_data(
     stage: &str,
-    runner: &egg::Runner<Expr, ExprAnalysis, ()>,  // Passe o runner diretamente
-    output_file_base: &str,
-    iteration_number: usize  // Número da iteração externa
+    runner: &egg::Runner<Expr, ExprAnalysis, ()>,
+    output_file_base: &str
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Extrair o nome da consulta do caminho do arquivo base
     let path = Path::new(output_file_base);
@@ -309,8 +316,8 @@ fn save_rules_application_data(
     let output_dir = format!("src/planner/outputs/rules_data/{}", file_stem);
     create_dir_all(&output_dir)?;
     
-    // Caminho para o arquivo CSV de saída - incluindo o número da iteração externa
-    let output_path = format!("{}/stage_{}_iter_{}_rules_application.csv", output_dir, stage, iteration_number);
+    // Caminho para o arquivo CSV de saída
+    let output_path = format!("{}/stage_{}_rules_application.csv", output_dir, stage);
     
     // Abrir o arquivo CSV para escrita
     let file = OpenOptions::new()
@@ -324,7 +331,6 @@ fn save_rules_application_data(
     // Escrever cabeçalhos
     wtr.write_record(&[
         "Stage", 
-        "External_Iteration",  // Iteração externa (do for i in 0..iteration)
         "Internal_Iteration",  // Iteração interna (do runner)
         "Class_Count", 
         "Node_Count",
@@ -335,14 +341,13 @@ fn save_rules_application_data(
     // Para cada iteração interna, escrever as regras aplicadas
     for (iter_idx, iter_data) in runner.iterations.iter().enumerate() {
         // Usar os campos corretos disponíveis no tipo Iteration<()>
-        let class_count = iter_data.egraph_classes; // Alterado de iter_data.egraph.number_of_classes()
-        let node_count = iter_data.egraph_nodes;    // Alterado de iter_data.egraph.total_size()
+        let class_count = iter_data.egraph_classes;
+        let node_count = iter_data.egraph_nodes;
         
         // Para cada regra aplicada nesta iteração
         for applied in &iter_data.applied {
             wtr.write_record(&[
                 stage,
-                &iteration_number.to_string(),
                 &iter_idx.to_string(),
                 &class_count.to_string(),
                 &node_count.to_string(),
@@ -355,7 +360,6 @@ fn save_rules_application_data(
         if iter_data.applied.is_empty() {
             wtr.write_record(&[
                 stage,
-                &iteration_number.to_string(),
                 &iter_idx.to_string(),
                 &class_count.to_string(),
                 &node_count.to_string(),
@@ -498,6 +502,13 @@ impl Optimizer {
                     &class_infos,
                     output_file,
                 ).expect("Falha ao salvar detalhes das classes");
+
+                // Save rules application data
+                save_rules_data(
+                    stage,
+                    &runner,
+                    output_file,
+                ).expect("Falha ao guardar dados de aplicação de regras");
 
                 // Para ir buscar ao Egg o número de merges para esta última iteration
                 let egg_stats = runner.egraph.get_merge_count();
