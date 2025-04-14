@@ -1,0 +1,16 @@
+Stage,Internal_Iteration,Class_Count,Node_Count,Rule_Name,Applications
+2,0,46,46,mul-comm,2
+2,0,46,46,eq-comm,1
+2,0,46,46,gt-comm,1
+2,0,46,46,ge-comm,1
+2,0,46,46,and-comm,1
+2,0,46,46,filter-split,1
+2,0,46,46,pushdown-proj-filter,1
+2,0,46,46,pushdown-proj-agg,1
+2,0,46,46,pushdown-proj-join,1
+2,1,53,63,filter-split,3
+2,1,53,63,pushdown-filter-proj,1
+2,1,53,63,identical-proj,4
+2,1,53,63,pushdown-proj-filter,1
+2,2,50,73,pushdown-filter-proj,3
+2,3,48,74,None,0

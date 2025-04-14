@@ -1,0 +1,4 @@
+Stage,Class_ID,Node_Count,Nodes
+3,0,1,Table($8)
+3,1,1,List([0])
+3,2,1,Drop(1)

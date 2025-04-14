@@ -1,0 +1,11 @@
+Stage,Internal_Iteration,Class_Count,Node_Count,Rule_Name,Applications
+1,0,117,117,eq-comm,5
+1,0,117,117,and-comm,24
+1,0,117,117,and-assoc,18
+1,1,134,181,and-comm,35
+1,1,134,181,and-assoc,78
+1,2,210,370,and-comm,153
+1,2,210,370,and-assoc,541
+1,3,595,1504,None,0
+1,4,595,1504,and-comm,860
+1,5,595,2364,None,0

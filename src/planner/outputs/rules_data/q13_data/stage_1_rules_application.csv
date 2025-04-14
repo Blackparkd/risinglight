@@ -1,0 +1,4 @@
+Stage,Internal_Iteration,Class_Count,Node_Count,Rule_Name,Applications
+1,0,49,49,eq-comm,1
+1,0,49,49,and-comm,1
+1,1,49,51,None,0

@@ -1,0 +1,16 @@
+Stage,Internal_Iteration,Class_Count,Node_Count,Rule_Name,Applications
+2,0,55,55,eq-comm,3
+2,0,55,55,gt-comm,1
+2,0,55,55,pushdown-proj-topn,1
+2,0,55,55,pushdown-proj-filter,1
+2,0,55,55,pushdown-proj-hashagg,2
+2,0,55,55,pushdown-proj-join,2
+2,1,68,78,pushdown-filter-proj,1
+2,1,68,78,identical-proj,7
+2,1,68,78,pushdown-proj-topn,1
+2,1,68,78,pushdown-proj-filter,1
+2,1,68,78,pushdown-proj-join,1
+2,2,66,89,pushdown-filter-proj,1
+2,2,66,89,identical-proj,6
+2,2,66,89,pushdown-proj-filter,1
+2,3,59,90,None,0
