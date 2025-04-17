@@ -23,6 +23,7 @@ use std::path::Path;
 use std::fs::{OpenOptions, create_dir_all};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use std::fs;
 use super::*;
 use crate::catalog::RootCatalogRef;
 use crate::planner::EGraph;
@@ -376,7 +377,51 @@ fn save_rules_data(
     Ok(())
 }
 
-
+// Função para calcular o custo total por estágio e salvar em CSV
+fn calculate_and_save_total_costs(query_name: &str, stage_costs: &[f32]) -> Result<(), Box<dyn Error>> {
+    // Criar o diretório se não existir
+    let output_dir = Path::new("src/planner/outputs/total_costs");
+    fs::create_dir_all(output_dir)?;
+    
+    // Nome do arquivo para salvar o custo total
+    let output_file = output_dir.join(format!("{}_data_total_cost.csv", query_name));
+    
+    // Abrir arquivo para escrita
+    let file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(&output_file)?;
+    
+    let mut wtr = Writer::from_writer(file);
+    
+    // Escrever cabeçalho
+    let mut headers = vec![String::from("Query")];  // Mudança aqui: String em vez de &str
+    for i in 0..stage_costs.len() {
+        headers.push(format!("Stage_{}_Cost", i+1));  // Mudança aqui: sem &
+    }
+    headers.push(String::from("Total_Cost"));  // Mudança aqui: String em vez de &str
+    wtr.write_record(&headers)?;  // Não precisamos mudar aqui pois &[String] é convertido para &[&str] automaticamente
+    
+    // Calcular custo total
+    let total_cost: f32 = stage_costs.iter().sum();
+    
+    // Preparar dados para escrita
+    let mut row = vec![query_name.to_string()];
+    for cost in stage_costs {
+        row.push(cost.to_string());
+    }
+    row.push(total_cost.to_string());
+    
+    // Escrever linha com os dados
+    wtr.write_record(&row)?;
+    
+    // Garantir que os dados sejam gravados
+    wtr.flush()?;
+    
+    println!("✅ Total cost data saved to: {}", output_file.display());
+    Ok(())
+}
 
 // =============================== MY HELPERS - END ==================================================== //
 
@@ -393,6 +438,7 @@ impl Optimizer {
 
     pub fn optimize(&self, mut expr: RecExpr) -> RecExpr {
         let mut cost = f32::MAX;
+        let mut stage_costs = Vec::new(); // Armazenar os custos de cada estágio
 
         // Faz-se aqui a leitura do ficheiro temporário para garantir que o ficheiro já tem o path certo
         // Caminho do ficheiro temporário
@@ -408,6 +454,7 @@ impl Optimizer {
         // Usar o caminho do arquivo
         let path = Path::new(&file_path);
         let file_stem = path.file_stem().unwrap_or_default().to_string_lossy();
+        let context_file = file_path.clone(); // Definir context_file aqui
         let output_file = format!("src/planner/outputs/query_data/{}_data.csv", file_stem);
         
         // Criar o diretório se não existir
@@ -434,14 +481,30 @@ impl Optimizer {
         // 1. pushdown apply 
         println!("\nStage 1\n");
         self.optimize_stage(&mut expr, &mut cost, STAGE1_RULES.iter(), 2, 6, "1", &output_file);
+        let cost_stage_1 = cost; // Usar o custo atual em vez de egraph.analysis.cost
+        stage_costs.push(cost_stage_1);
 
         // 2. pushdown predicate and projection
         println!("\nStage 2\n");
         self.optimize_stage(&mut expr, &mut cost, STAGE2_RULES.iter(), 4, 6, "2", &output_file);
+        let cost_stage_2 = cost; // Usar o custo atual em vez de egraph.analysis.cost
+        stage_costs.push(cost_stage_2);
 
         // 3. join reorder and hashjoin
         println!("\nStage 3\n");
         self.optimize_stage(&mut expr, &mut cost, STAGE3_RULES.iter(), 3, 8, "3", &output_file);
+        let cost_stage_3 = cost; // Usar o custo atual em vez de egraph.analysis.cost
+        stage_costs.push(cost_stage_3);
+
+        // Extrair o nome da query do arquivo de contexto atual
+        let query_name = {
+            let path = Path::new(&context_file);
+            path.file_stem().unwrap_or_default().to_string_lossy().to_string()
+        };
+        
+        // Salvar custos totais
+        calculate_and_save_total_costs(&query_name, &stage_costs)
+            .expect("Falha ao salvar custos totais");
 
         println!("\nSaving query information to: '{}'", &output_file);
 
