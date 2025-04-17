@@ -1,9 +1,56 @@
 # RisingLight
 
--- SQL Optimizers Analysis --
+-- Query Analyzer for RisingLight --
+This toolset provides comprehensive analysis capabilities for SQL query optimization in RisingLight.
+
+**How to Use the Query Analysis Script**
+The run.sh script offers a user-friendly interface for analyzing query performance and optimization processes.
+
+```bash
+./src/planner/script/run.sh
+```
+
+**Main Features**
+- Execute Query: Run specific SQL queries (1-22)
+- Extract Query Data: Collect performance metrics and optimization data
+- Generate Visualizations: Create histograms and plots for:
+    - Cost reduction across optimization stages
+    - Node distribution in equivalence classes
+    - Merge operations performed by the optimizer
+- Batch Processing: Analyze multiple queries at once (all queries, ranges, or specific selections)
+
+**Example Workflow**
+To analyze a single query:
+```bash
+# Start the script
+./src/planner/script/run.sh
+
+# Choose option 7 (Full Analysis)
+# Select query number (e.g., 5)
+```
+This will execute Query 5, extract all performance data, and generate all visualizations in the appropriate output directories.
+
+**Output Files**
+All analysis results are saved to src/planner/outputs/ with subdirectories for:
+
+- Cost histograms showing optimization progress across stages
+- CSV data files with detailed metrics
+- Equivalence class visualizations
+- Merge operation histograms
+
+**Batch Analysis Options**
+For analyzing multiple queries at once:
+
+- Run full analysis for ALL queries (1-22)
+- Run full analysis for a range of queries (e.g., 5-10)
+- Run full analysis for specific queries (e.g., 3, 7, 12)
+
+The batch analysis provides a consolidated view of optimization performance across multiple queries, helping identify patterns and areas for improvement.
+
+
 
 **TODO** 
-- Detail the node information on each group to better understand the shifts in every stage.
+- Report
 
 **DONE**
 - We managed to add prints to see how many groups of equivalent expressions exist and how many expressions exist within these groups.
@@ -43,7 +90,7 @@ Stage,Class_ID,Node_Count,Nodes
 - We have histograms for every stage with node information. Histogram as follows:
 ![Histogram](src/planner/outputs/graphs/node_distribution/q4/q4_stage3_histogram.png)
 
-- Egg altered to provido more info
+- Egg altered to provide more info
 - Histogram for number of merges per stage:
 ![Histogram](src/planner/outputs/graphs/egg-merges/q9/q9_merge_counts.png)
 ----------------------------------
