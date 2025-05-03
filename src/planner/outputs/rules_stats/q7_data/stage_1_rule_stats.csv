@@ -1,0 +1,6 @@
+Stage,Rule_Name,Total_Applications,Rank
+1,filter-split,411,1
+1,and-comm,305,2
+1,and-assoc,181,3
+1,filter-merge,122,4
+1,eq-comm,9,5

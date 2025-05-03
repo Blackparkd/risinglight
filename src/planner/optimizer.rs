@@ -27,6 +27,7 @@ use std::fs;
 use super::*;
 use crate::catalog::RootCatalogRef;
 use crate::planner::EGraph;
+use std::io::Write;
 
 #[derive(Debug)]
 struct ClassInfo {
@@ -377,6 +378,78 @@ fn save_rules_data(
     Ok(())
 }
 
+/// Função para analisar e salvar estatísticas sobre quais regras foram mais aplicadas
+fn analyze_and_save_rule_statistics(
+    stage: &str,
+    runner: &egg::Runner<Expr, ExprAnalysis, ()>,
+    output_file_base: &str
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Extrair o nome da consulta do caminho do arquivo base
+    let path = Path::new(output_file_base);
+    let file_stem = path.file_stem().unwrap_or_default().to_string_lossy();
+    
+    // Criar o diretório para os dados de regras se não existir
+    let output_dir = format!("src/planner/outputs/rules_stats/{}", file_stem);
+    create_dir_all(&output_dir)?;
+    
+    // Caminho para o arquivo CSV de saída
+    let output_path = format!("{}/stage_{}_rule_stats.csv", output_dir, stage);
+    
+    // Coletar estatísticas agregadas sobre aplicações de regras
+    let mut rule_applications: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+    
+    // Somar todas as aplicações de regras em todas as iterações
+    for iter_data in &runner.iterations {
+        for applied in &iter_data.applied {
+            let rule_name = applied.0.to_string();
+            let count = applied.1;
+            *rule_applications.entry(rule_name).or_insert(0) += count;
+        }
+    }
+    
+    // Converter para um vetor e ordenar por número de aplicações (decrescente)
+    let mut rule_stats: Vec<(String, usize)> = rule_applications.into_iter().collect();
+    rule_stats.sort_by(|a, b| b.1.cmp(&a.1));
+    
+    // Abrir o arquivo CSV para escrita
+    let file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(&output_path)?;
+    
+    let mut wtr = Writer::from_writer(file);
+    
+    // Escrever cabeçalhos
+    wtr.write_record(&["Stage", "Rule_Name", "Total_Applications", "Rank"])?;
+    
+    // Escrever dados ordenados
+    for (rank, (rule_name, applications)) in rule_stats.iter().enumerate() {
+        wtr.write_record(&[
+            stage,
+            rule_name,
+            &applications.to_string(),
+            &(rank + 1).to_string()
+        ])?;
+    }
+    
+    // Garantir que os dados sejam gravados
+    wtr.flush()?;
+    
+    println!("✅ Rule statistics saved to: {}", output_path);
+    
+    // Se é o Stage 3, imprimir as 5 regras mais aplicadas
+    if stage == "3" {
+        println!("\n🔍 Top 5 regras mais aplicadas no Stage 3:");
+        for (i, (rule_name, count)) in rule_stats.iter().take(5).enumerate() {
+            println!("   {}. {} - {} aplicações", i+1, rule_name, count);
+        }
+        println!("");
+    }
+    
+    Ok(())
+}
+
 // Função para calcular o custo total por estágio e salvar em CSV
 fn calculate_and_save_total_costs(query_name: &str, stage_costs: &[f32]) -> Result<(), Box<dyn Error>> {
     // Criar o diretório se não existir
@@ -422,6 +495,59 @@ fn calculate_and_save_total_costs(query_name: &str, stage_costs: &[f32]) -> Resu
     println!("✅ Total cost data saved to: {}", output_file.display());
     Ok(())
 }
+
+// Função para guardar a expressão relacional de cada stage num CSV
+fn save_stage_expression(
+    stage: &str,
+    expr: &RecExpr,
+    output_file: &str,
+) -> Result<String, Box<dyn Error>> {
+    use std::path::Path;
+
+    // Extrair o nome da query do ficheiro base
+    let base_filename = Path::new(output_file)
+        .file_name()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .trim_end_matches(".csv")
+        .to_string();
+
+    // Extrair o número da query (ex: "q2")
+    let query_dir = if let Some(query_num) = base_filename.split('_').next() {
+        query_num
+    } else {
+        "unknown_query"
+    };
+
+    // Criar diretório para as expressões desta query
+    let output_dir = Path::new("src/planner/outputs/expressions").join(query_dir);
+    create_dir_all(&output_dir)?;
+
+    // Caminho para o ficheiro CSV
+    let csv_path = output_dir.join("expressions.csv");
+
+    // Verificar se o ficheiro já existe para escrever o cabeçalho só uma vez
+    let file_exists = csv_path.exists();
+
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .append(true)
+        .open(&csv_path)?;
+
+    // Escrever cabeçalho se o ficheiro for novo
+    if !file_exists {
+        writeln!(file, "Stage,Expression")?;
+    }
+
+    // Escrever a expressão (como string única, escapando aspas)
+    let expr_str = format!("{:?}", expr).replace('"', "\"\"");
+    writeln!(file, "{},\"{}\"", stage, expr_str)?;
+
+    Ok(csv_path.to_string_lossy().into_owned())
+}
+
+
 
 // =============================== MY HELPERS - END ==================================================== //
 
@@ -476,6 +602,7 @@ impl Optimizer {
         save_to_csv("0", cost, relacionais, classes_eq, min_nodes, max_nodes, avg_nodes, &output_file).expect("Falha ao guardar no CSV");
         save_class_details("0", &class_infos, &output_file).expect("Falha ao guardar os detalhes das classes no CSV");
         save_egg_merges("0", egraph.get_merge_count(), &output_file).expect("Falha ao guardar contador de merges no CSV");
+        save_stage_expression("0", &expr, &output_file).expect("Falha ao guardar expressão inicial no CSV");
         //===============================//
 
         // 1. pushdown apply 
@@ -525,6 +652,10 @@ impl Optimizer {
         stage: &str,
         output_file: &str,
     ) {
+        // printing expression
+        println!("Stage {}: {}", stage, expr);
+        println!("Cost: {}", cost);
+        
         for i in 0..iteration {
             let runner = egg::Runner::<_, _, ()>::new(self.analysis.clone())
                 .with_expr(expr)
@@ -578,6 +709,20 @@ impl Optimizer {
                 println!("COUNTER MERGES: {}", egg_stats);
                 save_egg_merges(stage, egg_stats, output_file)
                     .expect("Falha ao guardar contador de merges");
+                
+                // Save the final expression
+                save_stage_expression(
+                    stage,
+                    expr,
+                    output_file,
+                ).expect("Falha ao guardar expressão final");
+
+                // Chamar a nova função de análise de regras
+                analyze_and_save_rule_statistics(
+                    stage,
+                    &runner,
+                    output_file
+                ).expect("Falha ao analisar estatísticas de regras");
 
 
             }
