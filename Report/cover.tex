@@ -1,0 +1,150 @@
+%% Blue cover color
+\definecolor{titlepagecolor}{RGB}{54,95,145}
+
+
+
+%==========================================================================
+% TITLE PAGE INFO
+%==========================================================================
+
+%% Changes values in this field to show information in the cover and back cover about your team/project
+
+
+%% TITLE
+\title{SQL Optimizer Analysis}
+
+\author{
+\begin{flushleft}
+\begin{tabular}{l l l}
+    \textbf{Eduardo Pereira} & \textbf{Tomás Meireles} & \textbf{Tiago Fernandes} \\
+    \small (A70619) & \small (A100106) & \small (A98983)
+\end{tabular}
+\end{flushleft}
+}
+
+
+
+%% Date
+
+\date{\today}
+
+%% Course
+\newcommand{\Course}{Computer Science}
+%% UniName
+\newcommand{\UniName}{University of Minho}
+
+%% UniPic
+\newcommand{\UniPic}{\includegraphics[scale=0.09]{uminho.png}}
+
+%% University 
+\newcommand{\University}{
+    \begin{flushleft}
+        \UniPic
+    \end{flushleft}
+    \textcolor{gray}{\small\textbf{\textsf{\UniName}}}\par
+    \textcolor{gray!70!white}{\small{\textsf{\Course}}}
+}
+
+%% UC
+\newcommand{\UC}{
+    \begin{flushleft}
+        \par\textcolor{titlepagecolor}{  \LARGE\textbf{\textsf{Development Report}}}
+    \end{flushleft}
+}
+
+%% School Year
+\newcommand{\SchoolYear}{
+    \small{\textsf{2024/2025}}}
+
+
+%% Define new command to show title, author and date
+\makeatletter
+\let\Title\@title
+\let\Author\@author
+\let\Date\@date
+\makeatother
+
+%==========================================================================
+% CLASSIFICATION SECTION 
+%==========================================================================
+
+%% School Year
+\newcommand{\ReceptionDate}{}
+%% Responsible
+\newcommand{\Responsible}{}
+
+
+
+
+
+
+%% MAKETEMPLATE
+\newcommand{\makecover}{
+
+%==========================================================================
+% BEGIN COVER PAGE 
+%==========================================================================
+
+%% Removes page number on footer
+\thispagestyle{empty}
+
+%% No indentation 
+\setlength{\parindent}{0em}
+
+
+
+%% Changing geometry to prevent overlay with text
+%% At the end of back cover, geometry is default with \restoregeometry
+\newgeometry{top=5cm,left=6cm,right=3cm,bottom=2cm}
+
+%% builds university info defined previously
+\University
+\vspace{1cm}
+%% builds curricular unity info defined previously
+\UC
+%% builds school year info defined previously
+\SchoolYear
+
+\vspace{3cm}
+%% bigger space (i think its the default one) between paragraphs 
+\setlength{\parskip}{1em}
+
+%% builds title info defined previously
+\par\textbf{\textsf{\huge\Title}}
+\vspace{1cm}
+%% builds author(s) info defined previously
+\par\Author
+
+\vspace{0.5cm}
+
+%% builds date info defined previously
+\par\Date
+\restoregeometry
+\pagebreak
+
+%==========================================================================
+% END COVER PAGE 
+%==========================================================================
+
+%==========================================================================
+% BEGIN BACK COVER PAGE 
+%==========================================================================
+
+%% Removes page number on footer
+\thispagestyle{empty}
+
+% Changing look of lines in tabular environment 
+% Dashed -> dotted 
+%% length of dashes
+\setlength\dashlinedash{0.3pt}
+%% space between dashes
+\setlength\dashlinegap{1.5pt}
+%% width of dashes
+\setlength\arrayrulewidth{1.1pt}
+
+
+\pagebreak
+%==========================================================================
+% END BACK COVER PAGE 
+%==========================================================================
+}
