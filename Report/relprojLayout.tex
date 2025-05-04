@@ -22,6 +22,7 @@
 
 \usepackage{arydshln}
 \usepackage{colortbl}
+\usepackage{fancyhdr}
 
 % Estilo do documento
 \renewcommand{\familydefault}{\sfdefault}
@@ -104,10 +105,23 @@
     urlcolor=black
 }
 
+\fancypagestyle{plain}{
+  \fancyhf{}
+  \fancyfoot[R]{\thepage}
+}
 
+\fancypagestyle{fancy}{
+  \fancyhf{}
+  \fancyfoot[L]{\hyperlink{toc}{\textbf{\underline{Back to Contents page}}}}
+  \fancyfoot[R]{\thepage}
+}
+
+\renewcommand{\headrulewidth}{0pt} % <--- coloca aqui!
+\pagestyle{fancy}
+
+% Início do documento
 \begin{document}
 
-% Capa (se existir o ficheiro cover.tex)
 \include{cover}
 \makecover 
 \pagenumbering{gobble}
@@ -138,12 +152,24 @@ The development process was structured into five main phases:
 This structured approach provided a deeper understanding of the inner workings of the optimizer and enabled a comprehensive analysis of its behavior across different stages.
 \end{abstract}
 
+\clearpage
+\pagenumbering{arabic}
+
+\clearpage
+\pagestyle{plain}
+\hypertarget{toc}{}
 \tableofcontents
+
+\clearpage
+\pagestyle{plain}
 \listoffigures
-%\listoftables
+
+\clearpage
+\pagestyle{fancy}
+
 
 \chapter{Introduction}\label{chap:intro}
-
+\thispagestyle{fancy}
 \section{Objectives}
 The main objectives of this project are:
 \begin{itemize}
@@ -168,6 +194,7 @@ To ease the reading and comprehension of this document, in this section will be 
 \end{itemize}
 
 \chapter{Description and Specification}\label{chap:analiseEspecificacao}
+\thispagestyle{fancy}
 \section{Informal Problem Description}\label{sec:descricaoProblema}
 
 A SQL query optimizer is a critical component of any database management system. It transforms user-written queries into efficient execution plans, aiming to minimize resource usage and execution time. The optimization process involves several complex stages, including:
@@ -205,7 +232,7 @@ The Risinglight database system is designed to support the TPC-H benchmark, whic
 
 
 \chapter{Optimization Stages and Rule Application}
-
+\thispagestyle{fancy}
 The optimizer starts with the initial logical expression, which is a representation of the SQL query. This expression is then transformed through a series of stages, each applying a set of rules to optimize the query. \\
 There are three main stages, each with its own set of rules and an unknown number of iterations, in order to target specific inefficiencies and improve the overall performance of the query execution plan. 
 
@@ -245,10 +272,10 @@ Each group of rules is applied iteratively within its stage. The optimizer may r
 
 
 \chapter{Visual Representation and Analysis} \label{chap:concDesenho}
+\thispagestyle{fancy}
 The goal of the optimizer is mainly to reduce the cost of the execution of certain queries, this is accomplished through a series of optimization stages that eventually lead to a more efficient database. \\
 Since our goal is to analyse this optimizer, we decided we should choose the TPC-H queries for which the cost decrease would be more significant. \\
 
-\section{Initial Analysis}
 We thought it would be helpful if we could see the cost for every query and compare it, before choosing the ones to further analyse. With this in mind and making use of the \textbf{Matplotlib library} in \textbf{Python}, we built a histogram, in which is displayed the cost for every stage the optimizer goes through. \\
 
 The initial cost is omitted from this histogram, as it remains identical across all queries.
@@ -270,16 +297,16 @@ To help understand the motivations behind this analysis, the table below has mor
     \label{fig:tab1}
 \end{figure}
 
-As we can see in the images above, the cost decrease through the 3 stages is more accentuated in the queries 2, 5, 7, 8 and 9. We will look at these 5 queries more closely to get some more information about what causes the cost to decrease as much.
+As we can see in the images above, the cost decrease through the 3 stages is more accentuated in the queries 2, 5, 7, 8 and 9. We will look at these 5 queries more closely to get some more information about what causes the cost to decrease as much.\\
 
-\section{Selective Analysis}
-In this section of the analysis, we will focus only on the queries mentioned in the previous section. We found the accentuated decrease in cost more interesting, and this section will help understand the reasons behind it. \\
+We found the accentuated decrease in cost more interesting, and this section will help understand the reasons behind it. \\
 
 While this analysis is only focused on the 5 queries mentioned, the remaining queries' analysis will be available on our GitHub repository - \textbf{\href{https://github.com/Blackparkd/risinglight/tree/main/src/planner/outputs/graphs}{Graphs folder}} for the reader to explore. \\
 
 First, for clarity purposes, we will display the query in SQL, next the relational expression generated, and only afterwards will we proceed with the in-depth analysis.
 
-\subsection{Query 2}
+\section{Query 2}
+
 \begin{lstlisting}
 select
     s_acctbal,
@@ -426,6 +453,7 @@ This is the reason for the difference between the number of equivalence classes 
 
 
 \chapter{Final Conclusions and Future Work} \label{chap:concl}
+\thispagestyle{fancy}
 This report describes our process of analyzing and visualizing the behavior of a SQL query optimizer through the instrumentation of the Risinglight database system. The project successfully achieved the objectives outlined in the introduction, providing valuable insights into the complex process of query optimization.
 
 Our visual representations have made it possible to observe patterns and behaviors that would be difficult to discern from raw data alone. The analysis of expression groups, relational operators, and cost estimates has deepened our understanding of how different queries are optimized.
@@ -449,9 +477,44 @@ Overall, this project has provided valuable insights into query optimization and
 
 \appendix
 
+\chapter{Appendix}
+\thispagestyle{fancy}
+\section{Important Links}
+\begin{itemize}
+    \item \textbf{Risinglight GitHub Repository:} \url{https://github.com/risinglightdb/risinglight}
+    \item \textbf{Egg library:} \url{https://github.com/egraphs-good/egg}
+    \item \textbf{Modified Risinglight GitHub Repository:} \url{https://github.com/Blackparkd/risinglight/tree/main}
+    \item \textbf{Modified Egg library:} \url{https://github.com/Blackparkd/egg}
+    \item \textbf{Generated histograms folder:} \url{https://github.com/Blackparkd/risinglight/tree/main/src/planner/outputs/graphs}
+    \item \textbf{Python scripts:} \url{https://github.com/Blackparkd/risinglight/tree/main/src/planner/script}
+    \item \textbf{Modified optimizer.rs file:} \url{https://github.com/Blackparkd/risinglight/blob/main/src/planner/optimizer.rs}
+\end{itemize}
+
+\section{References}
+\begin{itemize}
+    \item \textbf{Risinglight:} Risinglight is an open-source SQL database system designed for educational purposes. It is built on top of the Rust programming language and aims to provide high performance and scalability for data processing tasks.
+    \item \textbf{Egg library:} Egg is a Rust library for writing and manipulating e-graphs. It provides a framework for implementing various optimization techniques, including those used in query optimization.
+    \item \textbf{E-graphs:} E-graphs are data structures used to represent and optimize expressions in a way that allows for efficient manipulation and transformation. They are particularly useful in the context of query optimization, where multiple equivalent expressions may exist.
+    \item \textbf{SQL:} SQL (Structured Query Language) is a standard programming language used for managing and manipulating relational databases. It allows users to perform various operations, such as querying data, inserting records, updating information, and deleting entries.
+    \item \textbf{Query Optimization:} Query optimization is the process of transforming a SQL query into an efficient execution plan. It involves analyzing the query structure, applying various optimization techniques, and selecting the best plan based on cost estimates.
+    \item \textbf{Relational Algebra:} Relational algebra is a formal system for manipulating relations (tables) in a database. It provides a set of operations, such as selection, projection, and join, that can be used to express queries and transformations on relational data.
+    \item \textbf{TPC-H:} TPC-H is a widely used benchmark for evaluating the performance of database systems. It consists of a set of complex SQL queries that simulate real-world data processing scenarios, allowing researchers and developers to assess the efficiency of their systems.
+    \item \textbf{Python:} Python is a high-level programming language known for its simplicity and readability. It is widely used for data analysis, visualization, and scripting tasks. In this project, Python was used to generate histograms and visualize the optimization process.
+    \item \textbf{Matplotlib:} Matplotlib is a popular Python library for creating static, animated, and interactive visualizations. It provides a wide range of plotting functions and customization options, making it suitable for generating histograms and other types of charts.
+    \item \textbf{Rust:} Rust is a systems programming language that emphasizes safety, concurrency, and performance. It is used in the Risinglight database system to implement the query optimizer and other components.
+\end{itemize}
+
+\section{Acknowledgments}
+We would like to express our gratitude to Professor \textbf{José Orlando Pereira} for his guidance throughout this project. His expertise and insights were invaluable in shaping our understanding of query optimization and the Risinglight database system. \\
+You can find more information about his work and research on his personal page:\\
+\textbf{ \href{https://jopereira.github.io}{https://jopereira.github.io}}. \\
+
+
 % Se precisares de glossário, ativa estas linhas:
 % \usepackage{glossaries}
 % \makeglossaries
 % \printglossaries
+
+\renewcommand{\headrulewidth}{0pt}
 
 \end{document}
