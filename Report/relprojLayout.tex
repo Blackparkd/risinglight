@@ -161,18 +161,13 @@ Our approach focused on instrumenting the Risinglight database system to collect
 To ease the reading and comprehension of this document, in this section will be explained the structure and content of each chapter.
 
 \begin{itemize}
-    \item \textbf{Capítulo ~\ref{chap:intro}} - Definição do Sistema, que consiste em: Introduzir e descrever a contextualização do projeto desenvolvido, assim como os objetivos a atingir com o mesmo.
-    \item \textbf{Capítulo ~\ref{chap:analiseEspecificacao}} - Análise e Especificação: Descrever informalmente o problema, indicando o que se espera ser possível fazer.
-    \item \textbf{Capítulo ~\ref{chap:concDesenho}} - Concepção/Desenho da Resolução: Expôr todas as estruturas de dados utilizadas, que, de uma forma prática, indicam que tipo de programas podem (ou não) ser criados nesta linguagem.
-    \item \textbf{Capítulo ~\ref{chap:desegramatica}} - Desenho da Gramática: A gramática consiste numa demonstração mais organizada do que o compilador desenvolvido aceita.
-    \item \textbf{Capítulo ~\ref{chap:sistemadesen}} - O Sistema Desenvolvido: Neste capítulo é apresentado o código de implementação do projeto, dividido por categorias, assim como uma breve explicação das suas funções.
-    \item \textbf{Capítulo ~\ref{chap:codeteste}} - Codificação e Testes: Exemplificação de código reconhecido pelo nosso interpretador, e o seu respetivo código em Assembly.
-    \item \textbf{Capítulo ~\ref{chap:concl}} - Conclusão: Contém as últimas impressões acerca do projeto desenvolvido e oportunidades de trabalho futuro.
-    \item \textbf{Apêndice ~\ref{chap:lex}} - Código Lex: É apresentado o código inteiro do analisador léxico.
-    \item \textbf{Apêndice ~\ref{chap:yacc}} - Código Yacc: É apresentado o código, agora como um todo, do Código Parser e Tradutor.
+    \item \textbf{Chapter~\ref{chap:intro} -- Introduction:} Contextualization of the project and its main objectives.
+    \item \textbf{Chapter~\ref{chap:analiseEspecificacao} -- Description and Specification:} Informal description of the problem, project goals, and the data collected for analysis.
+    \item \textbf{Chapter~\ref{chap:concDesenho} -- Visual Representation and Analysis:} In-depth analysis of the optimizer's behavior, focusing on selected queries and the impact of each optimization stage.
+    \item \textbf{Chapter~\ref{chap:concl} -- Final Conclusions and Future Work:} Final remarks about the project and suggestions for future improvements.
 \end{itemize}
 
-\chapter{Analysis and Specification}\label{chap:analiseEspecificacao}
+\chapter{Description and Specification}\label{chap:analiseEspecificacao}
 \section{Informal Problem Description}\label{sec:descricaoProblema}
 
 A SQL query optimizer is a critical component of any database management system. It transforms user-written queries into efficient execution plans, aiming to minimize resource usage and execution time. The optimization process involves several complex stages, including:
@@ -249,7 +244,7 @@ The third stage focuses on optimizing join operations, which are often the most 
 Each group of rules is applied iteratively within its stage. The optimizer may revisit the same rule multiple times as the query plan evolves, ensuring that all possible optimizations are explored before moving to the next stage.
 
 
-\chapter{Analysis} \label{chap:concDesenho}
+\chapter{Visual Representation and Analysis} \label{chap:concDesenho}
 The goal of the optimizer is mainly to reduce the cost of the execution of certain queries, this is accomplished through a series of optimization stages that eventually lead to a more efficient database. \\
 Since our goal is to analyse this optimizer, we decided we should choose the TPC-H queries for which the cost decrease would be more significant. \\
 
@@ -402,29 +397,32 @@ static STAGE3_RULES: LazyLock<Vec<Rewrite>> = LazyLock::new(|| {
     \label{fig:rules2}
 \end{figure}
 
-Looking at the most popular rules applied during stage 3 (Figure \ref{fig:rules2}), we can see that the most frequently applied rules are related to join operations and projection pushdown. This aligns with our understanding that stage 3 focuses heavily on optimizing joins and their ordering.
+Looking at the most popular rules applied during stage 3 (Figure \ref{fig:rules2}), we can see that the most frequently applied rules are related to join operations and projection pushdown. This aligns with our understanding that stage 3 focuses heavily on optimizing joins and their order of execution.
 
 The high frequency of join-related rule applications explains the increase in expression groups, as each new join order or implementation strategy generates new equivalent expressions. Despite this increase in complexity, the optimizer successfully reduces the query's cost through these transformations.
 
-A rule \texttt{inner-join-swap} being the most frequently applied shows how significant join reordering is for query optimization. Consider the basic associativity transformation: $(A \Join B) \Join C \Rightarrow A \Join (B \Join C)$. This seemingly simple change in join order can drastically impact performance. If table $B \Join C$ produces a smaller intermediate result than $A \Join B$, the right-side expression requires less memory and computation in subsequent joins. This transformation alone was applied 658 times during stage 3 optimization of Query 2, suggesting how extensively the optimizer explores the space of possible join orders to find the most efficient execution plan.
+A rule \texttt{inner-join-swap} being the most frequently applied shows how significant join reordering is for query optimization. \\
 
+Consider the basic associativity transformation: $(A \bowtie B) \bowtie C \Rightarrow A \bowtie (B \bowtie C)$. This seemingly simple change in join order can drastically impact performance. If table $B \bowtie C$ produces a smaller intermediate result than $A \bowtie B$, the right-side expression requires less memory and computation in subsequent joins. \\
+This transformation alone was applied 658 times during stage 3 optimization of Query 2, suggesting how extensively the optimizer explores the space of possible join orders to find the most efficient execution plan.
 
-To better understand how these optimizations affect the query's execution plan, we can look at the merge operations performed during this stage.
+\subsection{Merge Operations}
 
-
-
+The merge operations are a specific type of transformation applied by the optimizer to combine equivalent expressions into a single representation. In this section, it's expected to see a large increase in the number of merge operations, since the optimizer has to find a way to merge all the equivalence expressions generated during stage 3. \\
 
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\linewidth]{img_merges/q2_merge_counts.png}
+    \includegraphics[width=\linewidth]{img_merges/q2_sizes.png}
     \caption{Query 2 - Merge operations}
     \label{fig:hist2}
 \end{figure}
 
-According to these 2 histograms, we can notice something interesting, yet, unexpected. \\
-When we think of merge operations, it becomes intuitive to think that the number of groups of equivalent expressions would be decreasing, since the merge operations cuts down equivalent expressions to combine them into one, but, that is not the case.\\
-As the merge operations become more frequent, so does the number of groups, which indicates that the optimizer is further expanding the possible ways to represent a certain operation, all while decreasing the general cost of the query.
+Here we can see that the optimizer has the expected behavior: The number of merge operations increases significantly during this stage, which means the expression groups generated during stage 3 are also being merged into a single representation. \\
+
+This histogram also has some interesting information about the number of equivalence classes and the number of unique nodes. Each equivalence class represents a group in which all the expressions are equivalent, while each node is an unique expression, for example, the expression \texttt{"a+b"} is a possible node.\\ 
+However, \texttt{"b+a"} can also be a node, but since they represent the same operation, they can be merged into a single equivalence class. \\
+This is the reason for the difference between the number of equivalence classes and the number of unique nodes, in stages where the growth of expression groups is more accentuated. \\
 
 
 \chapter{Final Conclusions and Future Work} \label{chap:concl}
