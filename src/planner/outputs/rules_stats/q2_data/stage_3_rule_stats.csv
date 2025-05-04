@@ -26,5 +26,5 @@ Stage,Rule_Name,Total_Applications,Rank
 3,hash-join-on-three-eq-rev,8,25
 3,pushdown-proj-proj,7,26
 3,filter-merge,5,27
-3,pushdown-proj-topn,1,28
-3,pushdown-proj-hashagg,1,29
+3,pushdown-proj-hashagg,1,28
+3,pushdown-proj-topn,1,29

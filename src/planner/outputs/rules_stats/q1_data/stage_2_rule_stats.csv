@@ -1,0 +1,12 @@
+Stage,Rule_Name,Total_Applications,Rank
+2,mul-comm,8,1
+2,identical-proj,3,2
+2,add-comm,3,3
+2,mul-add-factor,2,4
+2,pushdown-proj-order,2,5
+2,mul-assoc,2,6
+2,ge-comm,1,7
+2,mul-add-distri,1,8
+2,pushdown-proj-filter,1,9
+2,pushdown-proj-hashagg,1,10
+2,pushdown-filter-proj,1,11
