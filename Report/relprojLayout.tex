@@ -435,7 +435,8 @@ This transformation alone was applied 658 times during stage 3 optimization of Q
 
 \subsection{Merge Operations}
 
-The merge operations are a specific type of transformation applied by the optimizer to combine equivalent expressions into a single representation. In this section, it's expected to see a large increase in the number of merge operations, since the optimizer has to find a way to merge all the equivalence expressions generated during stage 3. \\
+The merge operations are a specific type of transformation applied by the optimizer to combine equivalent expressions into a single representation. \\
+In this section, it's expected to see a large increase in the number of merge operations. The rapid increase in expression groups, means there are new ways to represent the expression presented in the initial stage, which makes us wonder if this is actually helping minimize the cost of a query. The answer is yes, because in this group of new expressions, the optimizer will find new equivalent expressions and will merge them into the same one. ?? \\
 
 
 \begin{figure}[H]
@@ -445,7 +446,7 @@ The merge operations are a specific type of transformation applied by the optimi
     \label{fig:hist2}
 \end{figure}
 
-Here we can see that the optimizer has the expected behavior: The number of merge operations increases significantly during this stage, which means the expression groups generated during stage 3 are also being merged into a single representation. \\
+Here we can see that the optimizer has the expected behavior: The number of merge operations greatly increases, which means that, despite the increase in the number of expression groups generated during stage 3, a large group of these are also being merged into a single representation. \\
 
 This histogram also has some interesting information about the number of equivalence classes and the number of unique nodes. Each equivalence class represents a group in which all the expressions are equivalent, while each node is an unique expression, for example, the expression \texttt{"a+b"} is a possible node.\\ 
 However, \texttt{"b+a"} can also be a node, but since they represent the same operation, they can be merged into a single equivalence class. \\
@@ -479,6 +480,11 @@ Overall, this project has provided valuable insights into query optimization and
 
 \chapter{Appendix}
 \thispagestyle{fancy}
+
+\section{README}
+
+In order to run the project, you can make use of the \texttt{run.sh} script we developed to ease the analysis process. The README file in our GitHub Repository: \url{https://github.com/Blackparkd/risinglight/blob/main/README.md} contains all the necessary information to navigate the reader through this script. \\
+
 \section{Important Links}
 \begin{itemize}
     \item \textbf{Risinglight GitHub Repository:} \url{https://github.com/risinglightdb/risinglight}
