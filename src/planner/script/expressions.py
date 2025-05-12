@@ -18,12 +18,16 @@ def plot_expression_groups(csv_file, output_dir):
         stages = df['Stage'].astype(str)
         classes = df['Classes_Total']
 
+        # Alterar o esquema de cores e adicionar borda preta
         plt.figure(figsize=(8, 6))
-        plt.bar(stages, classes, color='skyblue', edgecolor='black')
+        bars = plt.bar(stages, classes, color=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b'], edgecolor='black', linewidth=1.2)
         plt.xlabel('Stage')
         plt.ylabel('Expression Groups')
+
+        # Adicionar os valores no topo das barras
         for i, v in enumerate(classes):
             plt.text(i, v + max(classes)*0.01, str(v), ha='center', va='bottom', fontsize=10)
+
         plt.tight_layout()
 
         os.makedirs(output_dir, exist_ok=True)
@@ -38,7 +42,7 @@ def plot_expression_groups(csv_file, output_dir):
 def main():
     base_dir = os.path.join("src", "planner", "outputs", "filtered_query_data")
     output_dir = os.path.join("src", "planner", "outputs", "graphs", "expression_groups")
-    queries = ['q2', 'q5', 'q7', 'q8', 'q9']
+    queries = ['q2', 'q5', 'q6' , 'q7', 'q8', 'q9']
 
     for query in queries:
         csv_file = os.path.join(base_dir, f"{query}_data_filtered.csv")

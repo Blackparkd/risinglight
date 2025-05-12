@@ -17,7 +17,7 @@ def filter_last_4_rows(query):
     print(f"Saved: {output_csv}")
 
 def main():
-    queries = ['q2', 'q5', 'q7', 'q8', 'q9']
+    queries = ['q2', 'q5', 'q6', 'q7', 'q8', 'q9']
     for query in queries:
         filter_last_4_rows(query)
 
