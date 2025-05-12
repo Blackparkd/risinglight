@@ -134,9 +134,9 @@
  {}
 
 \begin{abstract}
-This report outlines the development of a project carried out as part of the \textbf{Project} curricular unit in the third year of the \textbf{Computer Science} degree at the \textbf{University of Minho}. \\
+This report outlines the development of a project carried out as part of the \textbf{Project} curricular unit in the third year of the \textbf{Computer Science} degree at the \textbf{University of Minho}. 
 
-The main objective of the project is to perform an in-depth analysis of a SQL query optimizer, through the graphical representation of the various phases involved in the optimization process of each query. \\
+The main objective of the project is to perform an in-depth analysis of a SQL query optimizer, through the graphical representation of the various phases involved in the optimization process of each query. 
 
 To accomplish these objectives, and following the recommendation of our academic advisor, Professor \textbf{\href{https://jopereira.github.io}{José Orlando Pereira}}, we made use of the educational database system \textbf{Risinglight}, which includes a functional query optimizer available through its \textbf{\href{https://github.com/risinglightdb/risinglight}{GitHub repository}}. \\
 
@@ -210,10 +210,10 @@ Our project aims to make this process more tangible by analysing each stage and 
 
 To achieve this, we've instrumented the Risinglight query optimizer to capture detailed information about:
 \begin{itemize}
+    \item Cost decrease for each query
+    \item Number of nodes in the relational expression
     \item Expression groups generated during optimization
-    \item Relational operators used in query plans
-    \item Cost estimates for different execution alternatives
-    \item Statistical metrics such as maximum, minimum, and average number of expressions
+    \item Most used rules in a certain stage
     \item Insight into a specific optimizing technique: merge
 \end{itemize}
 
@@ -235,6 +235,9 @@ The Risinglight database system is designed to support the TPC-H benchmark, whic
 \thispagestyle{fancy}
 The optimizer starts with the initial logical expression, which is a representation of the SQL query. This expression is then transformed through a series of stages, each applying a set of rules to optimize the query. \\
 There are three main stages, each with its own set of rules and an unknown number of iterations, in order to target specific inefficiencies and improve the overall performance of the query execution plan. 
+
+
+\textbf{Iterative Application:} Each group of rules is applied iteratively within its stage. The optimizer may revisit the same rule multiple times as the query plan evolves, ensuring that all possible optimizations are explored before moving to the next stage.
 
 Throughout this report, we will refer to the initial state of the expression as \textbf{stage 0}, since it is the state before any optimization has been applied.
 Below is a summary of the three stages and their respective rules:
@@ -267,16 +270,15 @@ The third stage focuses on optimizing join operations, which are often the most 
     \item \textbf{Boolean Simplification and Always-Better Transformations:} These are applied again to further refine the plan.
 \end{itemize}
 
-\subsection{Iterative Application}
-Each group of rules is applied iteratively within its stage. The optimizer may revisit the same rule multiple times as the query plan evolves, ensuring that all possible optimizations are explored before moving to the next stage.
+
 
 
 \chapter{Visual Representation and Analysis} \label{chap:concDesenho}
 \thispagestyle{fancy}
 The goal of the optimizer is mainly to reduce the cost of the execution of certain queries, this is accomplished through a series of optimization stages that eventually lead to a more efficient database. \\
-Since our goal is to analyse this optimizer, we decided we should choose the TPC-H queries for which the cost decrease would be more significant. \\
+Since our goal is to analyse this optimizer, we decided we should choose the TPC-H queries for which the cost decrease would be more significant.
 
-We thought it would be helpful if we could see the cost for every query and compare it, before choosing the ones to further analyse. With this in mind and making use of the \textbf{Matplotlib library} in \textbf{Python}, we built a histogram, in which is displayed the cost for every stage the optimizer goes through. \\
+We thought it would be helpful if we could see the cost for every query and compare it, before choosing the ones to further analyse. With this in mind and making use of the \textbf{Matplotlib library} in \textbf{Python}, we built a histogram, in which is displayed the cost for every stage the optimizer goes through.
 
 The initial cost is omitted from this histogram, as it remains identical across all queries.
 This value is defined as the maximum possible value that can be represented by a 32-bit floating point number and it is assigned using the line \textbf{\texttt{[let mut cost = f32::MAX]}}. This number has a value of approximately $3.4 \times 10^{38}$.
@@ -287,7 +289,7 @@ This value is defined as the maximum possible value that can be represented by a
     \label{fig:cost1}
 \end{figure}
 
-The histogram above does a good job at providing some insight as to what queries would be more advantageous to analyse with more depth. \\
+The histogram above does a good job at providing some insight as to what queries would be more advantageous to analyse with more depth. 
 
 To help understand the motivations behind this analysis, the table below has more detailed information about every query: initial and decreased costs alongside the stages.
 
@@ -297,15 +299,255 @@ To help understand the motivations behind this analysis, the table below has mor
     \label{fig:tab1}
 \end{figure}
 
-As we can see in the images above, the cost decrease through the 3 stages is more accentuated in the queries 2, 5, 7, 8 and 9. We will look at these 5 queries more closely to get some more information about what causes the cost to decrease as much.\\
+Based on the images above, we come to the conclusion that some queries have a huge decrease in cost, while others barely evolve in efficiency. \\
+The query with the most decrease in cost throughout the stages is query 2, with a decrease of 2.502958e+27, and on query 6 the decrease is barelly noticeable, having only a difference of 12488.749499999998 from stage 1 to stage 3. 
 
-We found the accentuated decrease in cost more interesting, and this section will help understand the reasons behind it. \\
+These are the 2 querys we will focus on in this analysis, to understand the huge difference behind these two.
 
-While this analysis is only focused on the 5 queries mentioned, the remaining queries' analysis will be available on our GitHub repository - \textbf{\href{https://github.com/Blackparkd/risinglight/tree/main/src/planner/outputs/graphs}{Graphs folder}} for the reader to explore. \\
+We found the accentuated decrease in cost more interesting, and this section will help understand the reasons behind it. 
 
-First, for clarity purposes, we will display the query in SQL, next the relational expression generated, and only afterwards will we proceed with the in-depth analysis.
+While this analysis is only focused on the 2 queries mentioned, the remaining queries' analysis will be available on our GitHub repository - \textbf{\href{https://github.com/Blackparkd/risinglight/tree/main/src/planner/outputs/graphs}{Graphs folder}} for the reader to explore. 
 
+To understand the steps forward in this analysis, it's useful to see the SQL query that we are going to analyse, as well as the relational expression generated. \\
+Since these are quite complex, especially the expression generated, we will display them in the appendix, in the end of this report.
+
+\section{Query 6}
+
+\subsection{Relational Expression}
+
+The relational expression is a representation of the SQL query in a tree-like structure, where each node represents an operation or a relation. The expression is generated by the optimizer and serves as an intermediate representation before the final execution plan is created.
+In the appendix, in section \underline{\hyperref[subsec:query6]{\ref{subsec:query6}}}, we can see the SQL query, and the relational expression generated. 
+
+Judging by the relational expression alone, we can see we are dealing with a simple query, which already gives the hint that the optimizer won't have a lot of work to do with this one.
+
+Nevertheless, the optimizer still manages to reduce the number of nodes from 51 in the initial expression to 31 in the final optimized form, while maintaining the semantic equivalence of the query. 
+
+\subsection{Expression Groups}
+
+The expression groups are a representation of the different equivalent expressions generated during the optimization process. Each group contains expressions that are semantically equivalent but may differ in their internal representation. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{img/expression_groups/q6_expression_groups.png}
+    \caption{Query 6 - Expression Groups}
+    \label{fig:exprgroups1}
+\end{figure}
+
+The histogram above displays the number of expression groups generated at each stage of the optimization process. Within each group, there may be an unknown number of equivalent expressions. 
+
+The histogram shows that the number of expression groups generated in stage 2 is significantly higher than in stage 1 and stage 3. This suggests that the optimizer is exploring a larger number of equivalent expressions in stage 2, likely due to the application of more complex rules and transformations. \\
+This is also reflected in the histogram of cost reduction (Figure \ref{fig:cost1}), where we can see that the decrease in cost is more accentuated when we move from stage 1 to stage 2.
+Stage 2 is where the optimizer applies the predicate pushdown and projection pushdown rules. 
+
+\subsection{Rule Application}
+
+Given these new results, we can't help but wonder what exactly is happening during this stage that might trigger this increase in the number of expression groups. \\ Looking at the code in the \texttt{optimizer.rs} file, it's possible to learn exactly what rules are being applied during this stage. 
+
+The rules are defined in the \texttt{src/planner/rules} folder, and they are grouped into different categories. The rules that are applied during stage 2 are defined in the \texttt{src/planner/rules/plan.rs} file. 
+
+\begin{lstlisting}[language=Rust]
+static STAGE2_RULES: LazyLock<Vec<Rewrite>> = LazyLock::new(|| {
+    let mut rules = vec![];
+    rules.append(&mut rules::expr::and_rules());
+    rules.append(&mut rules::plan::always_better_rules());
+    rules.append(&mut rules::plan::predicate_pushdown_rules());
+    rules.append(&mut rules::plan::projection_pushdown_rules());
+    rules.append(&mut rules::plan::index_scan_rules());
+    rules
+});
+\end{lstlisting}
+
+These rules are critical for reducing data processing overhead. Predicate pushdown moves filter conditions (WHERE clauses) down the query tree closer to the data sources, allowing rows to be filtered out as early as possible before they participate in costly operations like joins. \\
+Projection pushdown ensures that only necessary columns are carried through each operation in the query plan, minimizing data movement between operations.
+
+When joined with index scan rules, which attempt to utilize available indexes instead of performing full table scans, these transformations significantly reduce the amount of data that needs to be processed in subsequent operations, leading to substantial performance improvements.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{img/img_rule_mostpop/top_5_rules_stage2_q6.png}
+    \caption{Query 6 - Rules in Stage 2}
+    \label{fig:rules1}
+\end{figure}
+
+The \textbf{filter-split} rules are optimization rules applied during query processing to simplify and improve the efficiency of query execution. These rules work by breaking down complex filter conditions (e.g., multiple conditions combined with AND) into separate, simpler filters. 
+
+Example:
+\begin{lstlisting}[language=SQL]
+SELECT * 
+FROM orders 
+WHERE order_date > '2023-01-01' AND total_amount < 100;
+\end{lstlisting}
+
+Initially, the optimizer represents the filter condition as a single node in the query plan:
+\begin{lstlisting}[language=SQL]
+(filter (and (> order_date '2023-01-01') (< total_amount 100)) orders)
+\end{lstlisting}
+
+After applying the filter-split rule, the condition is split into two separate filters:
+
+\begin{lstlisting}[language=SQL]
+(filter (> order_date '2023-01-01') 
+    (filter (< total_amount 100) orders))
+\end{lstlisting}
+
+This transformation has several benefits:
+\begin{itemize}
+    \item \textbf{Predicate Pushdown:} Each filter can now be pushed closer to the data source, reducing the amount of data processed in subsequent stages.
+    \item \textbf{Parallel Evatuation:} Independent filters can be evaluated in parallel, improving query performance.
+    \item \textbf{Index Utilization:} Splitting filters allows the optimizer to use indexes more effectively, as each condition can be matched to a specific index.
+\end{itemize}
+
+The second most applied rule is the \textbf{filter-merge} rule. While this may seem counterintuitive, since it's the opposite of the filter-split rule, it is important to understand that the optimizer applies both rules in a way that they can be used interchangeably. \\
+As we know, the optimizer visits these rules an indefinite amount of times, even within the same stage, which means, while the first rule splits the conditions on one iteration, the second rule may merge them back on the next iteration, if the optimizer sees fit. 
+
+This aligns with our understanding that stage 2 focuses heavily on optimizing the filter conditions and their order of execution.
+
+
+\subsection{Merge Operations}
+
+The merge operation is a critical step in the optimization process, as it allows the optimizer to combine multiple equivalent expressions into a single representation. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{img_merges/q6_sizes.png}
+    \caption{Query 6 - Merge Operations}
+    \label{fig:merge1}
+\end{figure}
+
+So far, regarding query 6, we were led to believe that stage 2 is where the optimizer does most of the work. However, when we look at the histogram above,not only are they more frequent in stage 3, but we can also see the growing difference between the amount of unique nodes and equivalence classes. 
+
+Each equivalence class represents a group in which all the expressions are equivalent, while each node is an unique expression, for example, the expression \texttt{"a+b"} is a possible node.\\ 
+However, \texttt{"b+a"} can also be a node, but since they represent the same operation, they can be merged into a single equivalence class. \\
+This is the reason for the growing difference between the number of equivalence classes and the number of unique nodes. \\
+
+
+% --------------------------- QUERY 2 -------------------------------- % 
 \section{Query 2}
+
+So now, we believe it will be interesting to see how the optimizer behaves with a more complex query, and how it manages to reduce the number of nodes in the expression. 
+
+\subsubsection{Relational Expression}
+
+The stage 0 expression for query 2 proves that this query is far more complex than the previous query we analysed.
+
+The expression is composed of 129 nodes, which is a significant increase compared to the 51 nodes in query 6. This complexity is expected, given the nature of the query, which involves multiple tables and subqueries. 
+
+One more reason to analyse the stage 0 expression is to understand how the optimizer starts with a very complex expression, and how it is gradually simplified throughout the stages. 
+
+
+As we can see in the \underline{\hyperref[subsec:query2]{appendix}}, the optimizer managed to reduce the number of nodes from 129 in the initial expression to 109 in the final optimized form, while maintaining the semantic equivalence of the query. \\ This reduction in complexity is one of the factors that contributes to the overall cost decrease. 
+
+So now, a good question to ask is: \textbf{How does the optimizer manage to reduce the number of nodes?} 
+
+To help answering this question, it is helpful to analyse the histogram of the expression groups generated during the optimization process. 
+
+\subsection{Expression Groups}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{img/expression_groups/q2_expression_groups.png}
+    \caption{Query 2 - Expression Groups}
+    \label{fig:exprgroups2}
+\end{figure}
+
+The histogram above displays the number of expression groups generated at each stage of the optimization process. Just like in query 6, there may be an unknown number of equivalent expressions inside each group. 
+
+According to the \textbf{Cost Reduction} histogram (Figure \ref{fig:cost1}), the decrease in cost is more accentuated when we move from stage 2 to stage 3. This is the stage where the optimizer applies the join reordering and hash join rules. \\
+This is also reflected in the histogram of expression groups (Figure \ref{fig:exprgroups2}), where we can see that the number of groups generated in stage 3 is significantly higher than in stage 2. \\
+This implies that the optimizer is, not only exploring a larger number of equivalent expressions in stage 3, but also being able to reduce the overall cost of the query. 
+
+This is a very interesting finding, as it suggests that the optimizer is capable of finding more efficient ways to represent the same operation, even when the number of equivalent expressions increases. 
+
+\subsection{Rule Application}
+
+Given these new results, we can't help but wonder what exactly is happening during this stage that might trigger this increase in the number of expression groups. \\ Looking at the code in the \texttt{optimizer.rs} file, it's possible to learn exactly what rules are being applied during this stage. 
+
+The rules are defined in the \texttt{src/planner/rules} folder, and they are grouped into different categories. The rules that are applied during stage 3 are defined in the \texttt{src/planner/rules/plan.rs} file. 
+
+\begin{lstlisting}[language=Rust]
+static STAGE3_RULES: LazyLock<Vec<Rewrite>> = LazyLock::new(|| {
+    let mut rules = vec![];
+    rules.append(&mut rules::expr::and_rules());
+    rules.append(&mut rules::plan::always_better_rules());
+    rules.append(&mut rules::plan::join_reorder_rules());
+    rules.append(&mut rules::plan::hash_join_rules());
+    rules.append(&mut rules::plan::predicate_pushdown_rules());
+    rules.append(&mut rules::plan::projection_pushdown_rules());
+    rules.append(&mut rules::order::order_rules());
+    rules
+});
+\end{lstlisting}
+
+The rules applied during stage 3 are similar to those in stage 2, but with a focus on join operations and hash joins. The optimizer applies the join reordering and hash join rules to optimize the join operations, which are often the most expensive part of query execution.\\
+The join reordering rules change the order in which joins are performed, aiming to minimize intermediate result sizes and overall cost. The hash join rules convert suitable joins into hash joins, which are more efficient for large datasets.
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{img/img_rule_mostpop/top_5_rules_stage3_q2.png}
+    \caption{Query 2 - Rules in Stage 3}
+    \label{fig:rules2}
+\end{figure}
+
+Looking at the most popular rules applied during stage 3 (Figure \ref{fig:rules2}), we can see that the most frequently applied rules are related to join operations and projection pushdown. This aligns with our understanding that stage 3 focuses heavily on optimizing joins and their order of execution.
+
+The high frequency of join-related rule applications explains the increase in expression groups, as each new join order or implementation strategy generates new equivalent expressions. Despite this increase in complexity, the optimizer successfully reduces the query's cost through these transformations.
+
+A rule \texttt{inner-join-swap} being the most frequently applied shows how significant join reordering is for query optimization. 
+
+Consider the basic associativity transformation: $(A \bowtie B) \bowtie C \Rightarrow A \bowtie (B \bowtie C)$. This seemingly simple change in join order can drastically impact performance. If table $B \bowtie C$ produces a smaller intermediate result than $A \bowtie B$, the right-side expression requires less memory and computation in subsequent joins. \\
+This transformation alone was applied 658 times during stage 3 optimization of Query 2, suggesting how extensively the optimizer explores the space of possible join orders to find the most efficient execution plan.
+
+Just like in query 6, the \textbf{filter-split} rule is also present in the most used rules in this query.
+
+\subsection{Merge Operations}
+
+
+During stage 3, the optimizer applies join reordering rules and other transformations that generate a large number of new equivalent expressions. Each new join order or execution strategy can result in different representations for the same logical operation. As a consequence, the number of expression groups grows rapidly. \\
+However, many of these new expressions end up being semantically equivalent to each other. The merge mechanism of the optimizer serves precisely to identify and merge these equivalent expressions into a single group, reducing redundancy in the e-graph. Therefore, a significant increase in the number of merge operations is expected at this stage, reflecting the intense exploration of execution plan space and the subsequent consolidation of equivalent expressions.
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{img_merges/q2_sizes.png}
+    \caption{Query 2 - Merge operations}
+    \label{fig:hist2}
+\end{figure}
+
+Here we can see that the optimizer has the expected behavior: The number of merge operations greatly increases, which means that, despite the increase in the number of expression groups generated during stage 3, a large group of these are also being merged into a single representation. 
+
+This histogram also has some interesting information about the number of equivalence classes and the number of unique nodes. Just like in query 6, we can see that the number of equivalence classes is growing, while the number of unique nodes is decreasing. This is confirmation of what we mentioned before: that, before these operations, there are lot of equivalent expressions with the same semantic meaning. 
+
+
+\chapter{Final Conclusions and Future Work} \label{chap:concl}
+\thispagestyle{fancy}
+This report describes our process of analyzing and visualizing the behavior of a SQL query optimizer through the instrumentation of the Risinglight database system. The project successfully achieved the objectives outlined in the introduction, providing valuable insights into the complex process of query optimization.
+
+Our visual representations have made it possible to observe patterns and behaviors that would be difficult to discern from raw data alone. The analysis of expression groups, relational operators, and cost estimates has deepened our understanding of how different queries are optimized.
+
+Some key findings from our analysis include:
+\begin{itemize}
+    \item The relationship between query complexity and the number of expression groups generated
+    \item Common transformation patterns applied by the optimizer for specific query constructs
+    \item Situations where cost estimates may not accurately reflect actual execution performance
+\end{itemize}
+
+While we believe that our project meets the requirements initially set, there is still room for future work. Potential extensions include:
+\begin{itemize}
+    \item Dynamic visualizations that show the step-by-step progression of the optimization process
+    \item Interactive tools that allow users to modify queries and immediately see the impact on optimization
+    \item Deeper analysis of specific optimization techniques, such as join reordering or predicate pushdown
+    \item Integration with actual execution statistics to evaluate the effectiveness of optimization decisions
+\end{itemize}
+
+Overall, this project has provided valuable insights into query optimization and established a foundation for further research in this area.
+
+\appendix
+
+\chapter{Appendix}
+\thispagestyle{fancy}
+
+\section{Query 2}\label{subsec:query2}
 
 \begin{lstlisting}
 select
@@ -354,231 +596,44 @@ order by
 limit 100;
 \end{lstlisting}
 
-\subsubsection{Relational Expression}
-
-The relational expression is a representation of the SQL query in a tree-like structure, where each node represents an operation or a relation. The expression is generated by the optimizer and serves as an intermediate representation before the final execution plan is created.
-
+\subsection{Relational Expression}
 \textbf{Stage 0:}
-
 \begin{exprlisting}
-RecExpr { nodes: [Constant(Bool(true)), Column($1.2(1)), Column($1.1(1)), Column($1.0(1)), List([3, 2, 1]), Table($1), Scan([5, 4, 0]), Column($0.3(1)), Column($0.2(1)), Column($0.1(1)), Column($0.0(1)), List([10, 9, 8, 7]), Table($0), Scan([12, 11, 0]), Column($3.6(1)), Column($3.5(1)), Column($3.4(1)), Column($3.3(1)), Column($3.2(1)), Column($3.1(1)), Column($3.0(1)), List([20, 19, 18, 17, 16, 15, 14]), Table($3), Scan([22, 21, 0]), Column($4.4(1)), Column($4.3(1)), Column($4.2(1)), Column($4.1(1)), Column($4.0(1)), List([28, 27, 26, 25, 24]), Table($4), Scan([30, 29, 0]), Inner, Join([32, 0, 31, 23]), Join([32, 0, 33, 13]), Join([32, 0, 34, 6]), Constant(String(""EUROPE"")), Eq([2, 36]), Eq([8, 3]), Eq([17, 10]), Eq([20, 27]), Column($2.0), Eq([41, 28]), And([42, 40]), And([43, 39]), And([44, 38]), And([45, 37]), Filter([46, 35]), Min(25), List([48]), Agg([49, 47]), Filter([0, 50]), List([]), Order([52, 51]), Ref(48), List([54]), Proj([55, 53]), Constant(Int32(0)), Constant(Null), Limit([58, 57, 56]), Column($1.2), Column($1.1), Column($1.0), List([62, 61, 60]), Scan([5, 63, 0]), Column($0.3), Column($0.2), Column($0.1), Column($0.0), List([68, 67, 66, 65]), Scan([12, 69, 0]), Column($4.4), Column($4.3), Column($4.2), Column($4.1), Column($4.0), List([75, 74, 73, 72, 71]), Scan([30, 76, 0]), Column($3.6), Column($3.5), Column($3.4), Column($3.3), Column($3.2), Column($3.1), Column($3.0), List([84, 83, 82, 81, 80, 79, 78]), Scan([22, 85, 0]), Column($2.8), Column($2.7), Column($2.6), Column($2.5), Column($2.4), Column($2.3), Column($2.2), Column($2.1), List([41, 94, 93, 92, 91, 90, 89, 88, 87]), Table($2), Scan([96, 95, 0]), Join([32, 0, 97, 86]), Join([32, 0, 98, 77]), Join([32, 0, 99, 70]), Join([32, 0, 100, 64]), LeftOuter, Apply([102, 101, 59]), Eq([72, 54]), Eq([61, 36]), Eq([66, 62]), Eq([81, 68]), Constant(String(""\%BRASS"")), Like([91, 108]), Constant(Int32(15)), Eq([90, 110]), Eq([84, 74]), Eq([41, 75]), And([113, 112]), And([114, 111]), And([115, 109]), And([116, 107]), And([117, 106]), And([118, 105]), And([119, 104]), Filter([120, 103]), Filter([0, 121]), Desc(79), List([123, 67, 83, 41]), Order([124, 122]), List([79, 83, 67, 41, 93, 82, 80, 78]), Proj([126, 125]), Constant(Int32(100)), Limit([128, 57, 127])] }
+    RecExpr { nodes: [Constant(Bool(true)), Column($1.2(1)), Column($1.1(1)), Column($1.0(1)), List([3, 2, 1]), Table($1), Scan([5, 4, 0]), Column($0.3(1)), Column($0.2(1)), Column($0.1(1)), Column($0.0(1)), List([10, 9, 8, 7]), Table($0), Scan([12, 11, 0]), Column($3.6(1)), Column($3.5(1)), Column($3.4(1)), Column($3.3(1)), Column($3.2(1)), Column($3.1(1)), Column($3.0(1)), List([20, 19, 18, 17, 16, 15, 14]), Table($3), Scan([22, 21, 0]), Column($4.4(1)), Column($4.3(1)), Column($4.2(1)), Column($4.1(1)), Column($4.0(1)), List([28, 27, 26, 25, 24]), Table($4), Scan([30, 29, 0]), Inner, Join([32, 0, 31, 23]), Join([32, 0, 33, 13]), Join([32, 0, 34, 6]), Constant(String(""EUROPE"")), Eq([2, 36]), Eq([8, 3]), Eq([17, 10]), Eq([20, 27]), Column($2.0), Eq([41, 28]), And([42, 40]), And([43, 39]), And([44, 38]), And([45, 37]), Filter([46, 35]), Min(25), List([48]), Agg([49, 47]), Filter([0, 50]), List([]), Order([52, 51]), Ref(48), List([54]), Proj([55, 53]), Constant(Int32(0)), Constant(Null), Limit([58, 57, 56]), Column($1.2), Column($1.1), Column($1.0), List([62, 61, 60]), Scan([5, 63, 0]), Column($0.3), Column($0.2), Column($0.1), Column($0.0), List([68, 67, 66, 65]), Scan([12, 69, 0]), Column($4.4), Column($4.3), Column($4.2), Column($4.1), Column($4.0), List([75, 74, 73, 72, 71]), Scan([30, 76, 0]), Column($3.6), Column($3.5), Column($3.4), Column($3.3), Column($3.2), Column($3.1), Column($3.0), List([84, 83, 82, 81, 80, 79, 78]), Scan([22, 85, 0]), Column($2.8), Column($2.7), Column($2.6), Column($2.5), Column($2.4), Column($2.3), Column($2.2), Column($2.1), List([41, 94, 93, 92, 91, 90, 89, 88, 87]), Table($2), Scan([96, 95, 0]), Join([32, 0, 97, 86]), Join([32, 0, 98, 77]), Join([32, 0, 99, 70]), Join([32, 0, 100, 64]), LeftOuter, Apply([102, 101, 59]), Eq([72, 54]), Eq([61, 36]), Eq([66, 62]), Eq([81, 68]), Constant(String(""\%BRASS"")), Like([91, 108]), Constant(Int32(15)), Eq([90, 110]), Eq([84, 74]), Eq([41, 75]), And([113, 112]), And([114, 111]), And([115, 109]), And([116, 107]), And([117, 106]), And([118, 105]), And([119, 104]), Filter([120, 103]), Filter([0, 121]), Desc(79), List([123, 67, 83, 41]), Order([124, 122]), List([79, 83, 67, 41, 93, 82, 80, 78]), Proj([126, 125]), Constant(Int32(100)), Limit([128, 57, 127])] }
+
 \end{exprlisting}
-
-One more reason to show the stage 0 expression is to show how the optimizer starts with a very complex expression (containing 129 nodes), and how it is gradually simplified throughout the stages. \\
-
+\newpage
 \textbf{Stage 3:}
-
 \begin{exprlisting}
-RecExpr { nodes: [Constant(Bool(true)), Column($4.3(1)), Column($4.1(1)), Column($4.0(1)), List([3, 2, 1]), Table($4), Scan([5, 4, 0]), Column($3.3(1)), Column($3.0(1)), List([8, 7]), Table($3), Scan([10, 9, 0]), Column($0.2(1)), Column($0.0(1)), List([13, 12]), Table($0), Scan([15, 14, 0]), Column($1.1(1)), Column($1.0(1)), List([18, 17]), Table($1), Scan([20, 19, 0]), Constant(String(""EUROPE"")), Eq([17, 22]), Filter([23, 21]), List([18]), Proj([25, 24]), List([12]), Inner, HashJoin([28, 0, 25, 27, 26, 16]), List([13]), Proj([30, 29]), List([7]), HashJoin([28, 0, 30, 32, 31, 11]), List([8]), Proj([34, 33]), List([2]), HashJoin([28, 0, 34, 36, 35, 6]), List([3, 1]), Proj([38, 37]), Column($4.4), Column($4.3), Column($4.2), Column($4.1), Column($4.0), List([44, 43, 42, 41, 40]), Scan([5, 45, 0]), Column($3.6), Column($3.5), Column($3.4), Column($3.3), Column($3.2), Column($3.1), Column($3.0), List([53, 52, 51, 50, 49, 48, 47]), Scan([10, 54, 0]), Column($1.2), Column($1.1), Column($1.0), List([58, 57, 56]), Scan([20, 59, 0]), Eq([22, 57]), Filter([61, 60]), Column($0.3), Column($0.2), Column($0.1), Column($0.0), List([66, 65, 64, 63]), Scan([15, 67, 0]), List([58]), List([64]), HashJoin([28, 0, 70, 69, 68, 62]), List([50]), List([66]), HashJoin([28, 0, 73, 72, 71, 55]), List([43]), List([53]), HashJoin([28, 0, 76, 75, 74, 46]), List([53, 52, 51, 50, 49, 48, 47, 44, 43, 42, 41, 40, 66, 65, 64, 63, 58, 57, 56]), Proj([78, 77]), Column($2.8), Column($2.7), Column($2.6), Column($2.5), Column($2.4), Column($2.3), Column($2.2), Column($2.1), Column($2.0), List([88, 87, 86, 85, 84, 83, 82, 81, 80]), Table($2), Scan([90, 89, 0]), Constant(Int32(15)), Eq([83, 92]), Constant(String(""\%BRASS"")), Like([84, 94]), And([95, 93]), Filter([96, 91]), List([44]), List([88]), HashJoin([28, 0, 99, 98, 97, 79]), List([3]), LeftOuter, HashJoin([102, 0, 99, 98, 97, 79]), List([3]), Proj([106, 105]), Constant(Int32(100)), Limit([108, 57, 107])] }
+RecExpr { nodes: [Constant(Bool(true)), Column($4.3(1)), Column($4.1(1)), Column($4.0(1)), List([3, 2, 1]), Table($4), Scan([5, 4, 0]), Column($3.3(1)), Column($3.0(1)), List([8, 7]), Table($3), Scan([10, 9, 0]), Column($0.2(1)), Column($0.0(1)), List([13, 12]), Table($0), Scan([15, 14, 0]), Column($1.1(1)), Column($1.0(1)), List([18, 17]), Table($1), Scan([20, 19, 0]), Constant(String(""EUROPE"")), Eq([17, 22]), Filter([23, 21]), List([18]), Proj([25, 24]), List([12]), Inner, HashJoin([28, 0, 25, 27, 26, 16]), List([13]), Proj([30, 29]), List([7]), HashJoin([28, 0, 30, 32, 31, 11]), List([8]), Proj([34, 33]), List([2]), HashJoin([28, 0, 34, 36, 35, 6]), List([3, 1]), Proj([38, 37]), Column($4.4), Column($4.3), Column($4.2), Column($4.1), Column($4.0), List([44, 43, 42, 41, 40]), Scan([5, 45, 0]), Column($3.6), Column($3.5), Column($3.4), Column($3.3), Column($3.2), Column($3.1), Column($3.0), List([53, 52, 51, 50, 49, 48, 47]), Scan([10, 54, 0]), Column($1.2), Column($1.1), Column($1.0), List([58, 57, 56]), Scan([20, 59, 0]), Eq([22, 57]), Filter([61, 60]), Column($0.3), Column($0.2), Column($0.1), Column($0.0), List([66, 65, 64, 63]), Scan([15, 67, 0]), List([58]), List([64]), HashJoin([28, 0, 70, 69, 68, 62]), List([50]), List([66]), HashJoin([28, 0, 73, 72, 71, 55]), List([43]), List([53]), HashJoin([28, 0, 76, 75, 74, 46]), List([53, 52, 51, 50, 49, 48, 47, 44, 43, 42, 41, 40, 66, 65, 64, 63, 58, 57, 56]), Proj([78, 77]), Column($2.8), Column($2.7), Column($2.6), Column($2.5), Column($2.4), Column($2.3), Column($2.2), Column($2.1), Column($2.0), List([88, 87, 86, 85, 84, 83, 82, 81, 80]), Table($2), Scan([90, 89, 0]), Constant(Int32(15)), Eq([83, 92]), Constant(String(""\%BRASS"")), Like([84, 94]), And([95, 93]), Filter([96, 91]), List([44]), List([88]), HashJoin([28, 0, 99, 98, 97, 79]), List([3]), LeftOuter, HashJoin([102, 0, 99, 101, 100, 39]), List([88, 87, 86, 85, 84, 83, 82, 81, 80, 53, 52, 51, 50, 49, 48, 47, 44, 43, 42, 41, 40, 66, 65, 64, 63, 58, 57, 56, 1]), Proj([104, 103]), Min(1), List([106]), List([88, 87, 86, 85, 84, 83, 82, 81, 80, 53, 52, 51, 50, 49, 48, 47, 44, 43, 42, 41, 40, 66, 65, 64, 63, 58, 57, 56]), HashAgg([108, 107, 105]), Ref(106), List([88, 86, 52, 51, 49, 48, 47, 41, 65, 110]), Proj([111, 109]), Eq([41, 110]), Filter([113, 112]), List([88, 86, 52, 51, 49, 48, 47, 65]), Proj([115, 114]), Desc(48), List([117, 65, 52, 88]), Constant(Int32(0)), Constant(Int32(100)), TopN([120, 119, 118, 116]), List([48, 52, 65, 88, 86, 51, 49, 47]), Proj([122, 121])] }
 \end{exprlisting}
 
-As we can see, the optimizer managed to reduce the number of nodes from 129 in the initial expression to 109 in the final optimized form, while maintaining the semantic equivalence of the query. \\ This reduction in complexity is one of the factors that contributes to the overall cost decrease. \\
 
-So now, a good question to ask is: \textbf{How does the optimizer manage to reduce the number of nodes?} \\
+\section{Query 6}\label{subsec:query6}
 
-To help answering this question, it is helpful to analyse the histogram of the expression groups generated during the optimization process. 
-
-\subsection{Expression Groups}
-
-The expression groups are a representation of the different equivalent expressions generated during the optimization process. Each group contains expressions that are semantically equivalent but may differ in their internal representation. \\
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.80\linewidth]{img/expression_groups/q2_expression_groups.png}
-    \caption{Query 2 - Expression Groups}
-    \label{fig:exprgroups2}
-\end{figure}
-
-The histogram above displays the number of expression groups generated at each stage of the optimization process. Within each group, there may be an unknown number of equivalent expressions. \\
-
-According to the \textbf{Cost Reduction} histogram (Figure \ref{fig:cost1}), the decrease in cost is more accentuated when we move from stage 2 to stage 3. This is the stage where the optimizer applies the join reordering and hash join rules. \\
-This is also reflected in the histogram of expression groups (Figure \ref{fig:exprgroups2}), where we can see that the number of groups generated in stage 3 is significantly higher than in stage 2. \\
-This gives the impression that the optimizer is, not only exploring a larger number of equivalent expressions in stage 3, but also being able to reduce the overall cost of the query. \\
-
-This is a very interesting finding, as it suggests that the optimizer is capable of finding more efficient ways to represent the same operation, even when the number of equivalent expressions increases. \\
-
-\subsection{Rule Application}
-
-Given these new results, we can't help but wonder what exactly is happening during this stage that might trigger this increase in the number of expression groups. \\ Looking at the code in the \texttt{optimizer.rs} file, it's possible to learn exactly what rules are being applied during this stage. \\
-
-The rules are defined in the \texttt{src/planner/rules} folder, and they are grouped into different categories. The rules that are applied during stage 3 are defined in the \texttt{src/planner/rules/plan.rs} file. \\
-
-\begin{lstlisting}[language=Rust]
-static STAGE3_RULES: LazyLock<Vec<Rewrite>> = LazyLock::new(|| {
-    let mut rules = vec![];
-    rules.append(&mut rules::expr::and_rules());
-    rules.append(&mut rules::plan::always_better_rules());
-    rules.append(&mut rules::plan::join_reorder_rules());
-    rules.append(&mut rules::plan::hash_join_rules());
-    rules.append(&mut rules::plan::predicate_pushdown_rules());
-    rules.append(&mut rules::plan::projection_pushdown_rules());
-    rules.append(&mut rules::order::order_rules());
-    rules
-});
-\end{lstlisting}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.95\linewidth]{img/img_rule_mostpop/top_5_rules_stage3_q2.png}
-    \caption{Query 2 - Rules in Stage 3}
-    \label{fig:rules2}
-\end{figure}
-
-Looking at the most popular rules applied during stage 3 (Figure \ref{fig:rules2}), we can see that the most frequently applied rules are related to join operations and projection pushdown. This aligns with our understanding that stage 3 focuses heavily on optimizing joins and their order of execution.
-
-The high frequency of join-related rule applications explains the increase in expression groups, as each new join order or implementation strategy generates new equivalent expressions. Despite this increase in complexity, the optimizer successfully reduces the query's cost through these transformations.
-
-A rule \texttt{inner-join-swap} being the most frequently applied shows how significant join reordering is for query optimization. \\
-
-Consider the basic associativity transformation: $(A \bowtie B) \bowtie C \Rightarrow A \bowtie (B \bowtie C)$. This seemingly simple change in join order can drastically impact performance. If table $B \bowtie C$ produces a smaller intermediate result than $A \bowtie B$, the right-side expression requires less memory and computation in subsequent joins. \\
-This transformation alone was applied 658 times during stage 3 optimization of Query 2, suggesting how extensively the optimizer explores the space of possible join orders to find the most efficient execution plan.
-
-\subsection{Merge Operations}
-
-
-During stage 3, the optimizer applies join reordering rules and other transformations that generate a large number of new equivalent expressions. Each new join order or execution strategy can result in different representations for the same logical operation. As a consequence, the number of expression groups grows rapidly. \\
-However, many of these new expressions end up being semantically equivalent to each other. The merge mechanism of the optimizer serves precisely to identify and merge these equivalent expressions into a single group, reducing redundancy in the e-graph. Therefore, a significant increase in the number of merge operations is expected at this stage, reflecting the intense exploration of execution plan space and the subsequent consolidation of equivalent expressions.
-
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\linewidth]{img_merges/q2_sizes.png}
-    \caption{Query 2 - Merge operations}
-    \label{fig:hist2}
-\end{figure}
-
-Here we can see that the optimizer has the expected behavior: The number of merge operations greatly increases, which means that, despite the increase in the number of expression groups generated during stage 3, a large group of these are also being merged into a single representation. \\
-
-This histogram also has some interesting information about the number of equivalence classes and the number of unique nodes. Each equivalence class represents a group in which all the expressions are equivalent, while each node is an unique expression, for example, the expression \texttt{"a+b"} is a possible node.\\ 
-However, \texttt{"b+a"} can also be a node, but since they represent the same operation, they can be merged into a single equivalence class. \\
-This is the reason for the difference between the number of equivalence classes and the number of unique nodes, in stages where the growth of expression groups is more accentuated. \\
-
-\section{Query 8}
 \begin{lstlisting}
     select
-    o_year,
-    sum(case
-        when nation = 'IRAQ' then volume
-        else 0
-    end) / sum(volume) as mkt_share
+    sum(l_extendedprice * l_discount) as revenue
 from
-    (
-        select
-            extract(year from o_orderdate) as o_year,
-            l_extendedprice * (1 - l_discount) as volume,
-            n2.n_name as nation
-        from
-            part,
-            supplier,
-            lineitem,
-            orders,
-            customer,
-            nation n1,
-            nation n2,
-            region
-        where
-            p_partkey = l_partkey
-            and s_suppkey = l_suppkey
-            and l_orderkey = o_orderkey
-            and o_custkey = c_custkey
-            and c_nationkey = n1.n_nationkey
-            and n1.n_regionkey = r_regionkey
-            and r_name = 'AMERICA'
-            and s_nationkey = n2.n_nationkey
-            and o_orderdate between date '1995-01-01' and date '1996-12-31'
-            and p_type = 'ECONOMY ANODIZED STEEL'
-    ) as all_nations
-group by
-    o_year
-order by
-    o_year;
+    lineitem
+where
+    l_shipdate >= date '1994-01-01'
+    and l_shipdate < date '1994-01-01' + interval '1' year
+    and l_discount between 0.08 - 0.01 and 0.08 + 0.01
+    and l_quantity < 24;
 \end{lstlisting}
 
-\subsubsection{Relational Expression}
+\subsection{Relational Expression}
 \textbf{Stage 0:}
+
 \begin{exprlisting}
-    "RecExpr { nodes: [Constant(Bool(true)), Column($1.2), Column($1.1), Column($1.0), List([3, 2, 1]), Table($1), Scan([5, 4, 0]), Column($0.3(1)), Column($0.2(1)), Column($0.1(1)), Column($0.0(1)), List([10, 9, 8, 7]), Table($0), Scan([12, 11, 0]), Column($0.3), Column($0.2), Column($0.1), Column($0.0), List([17, 16, 15, 14]), Scan([12, 18, 0]), Column($5.7), Column($5.6), Column($5.5), Column($5.4), Column($5.3), Column($5.2), Column($5.1), Column($5.0), List([27, 26, 25, 24, 23, 22, 21, 20]), Table($5), Scan([29, 28, 0]), Column($6.8), Column($6.7), Column($6.6), Column($6.5), Column($6.4), Column($6.3), Column($6.2), Column($6.1), Column($6.0), List([39, 38, 37, 36, 35, 34, 33, 32, 31]), Table($6), Scan([41, 40, 0]), Column($7.15), Column($7.14), Column($7.13), Column($7.12), Column($7.11), Column($7.10), Column($7.9), Column($7.8), Column($7.7), Column($7.6), Column($7.5), Column($7.4), Column($7.3), Column($7.2), Column($7.1), Column($7.0), List([58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 43]), Table($7), Scan([60, 59, 0]), Column($3.6), Column($3.5), Column($3.4), Column($3.3), Column($3.2), Column($3.1), Column($3.0), List([68, 67, 66, 65, 64, 63, 62]), Table($3), Scan([70, 69, 0]), Column($2.8), Column($2.7), Column($2.6), Column($2.5), Column($2.4), Column($2.3), Column($2.2), Column($2.1), Column($2.0), List([80, 79, 78, 77, 76, 75, 74, 73, 72]), Table($2), Scan([82, 81, 0]), Inner, Join([84, 0, 83, 71]), Join([84, 0, 85, 61]), Join([84, 0, 86, 42]), Join([84, 0, 87, 30]), Join([84, 0, 88, 19]), Join([84, 0, 89, 13]), Join([84, 0, 90, 6]), Constant(String(""ECONOMY ANODIZED STEEL"")), Eq([76, 92]), Constant(Date(Date(9861))), LtEq([35, 94]), Constant(Date(Date(9131))), GtEq([35, 96]), And([97, 95]), Eq([65, 10]), Constant(String(""AMERICA"")), Eq([2, 100]), Eq([15, 3]), Eq([24, 17]), Eq([38, 27]), Eq([58, 39]), Eq([68, 56]), Eq([80, 57]), And([107, 106]), And([108, 105]), And([109, 104]), And([110, 103]), And([111, 102]), And([112, 101]), And([113, 99]), And([114, 98]), And([115, 93]), Filter([116, 91]), Filter([0, 117]), List([]), Order([119, 118]), Constant(Int32(1)), Sub([121, 52]), Mul([53, 122]), Field(DateTimeField(Year)), Extract([124, 35]), List([125, 123, 9]), Proj([126, 120]), Constant(Int32(0)), Constant(Null), Limit([129, 128, 127]), Filter([0, 130]), Ref(123), Sum(132), Type(Decimal(Some(30), Some(4))), Cast([134, 128]), Constant(String(""IRAQ"")), Eq([9, 136]), If([137, 132, 135]), Sum(138), List([139, 133]), Ref(125), List([141]), HashAgg([142, 140, 131]), Filter([0, 143]), Order([142, 144]), Ref(133), Ref(139), Div([147, 146]), List([141, 148]), Proj([149, 145]), Limit([129, 128, 150])] }"
+    RecExpr { nodes: [Constant(Bool(true)), Column($7.15), Column($7.14), Column($7.13), Column($7.12), Column($7.11), Column($7.10), Column($7.9), Column($7.8), Column($7.7), Column($7.6), Column($7.5), Column($7.4), Column($7.3), Column($7.2), Column($7.1), Column($7.0), List([16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]), Table($7), Scan([18, 17, 0]), Constant(Int32(24)), Lt([12, 20]), Constant(Decimal(0.01)), Constant(Decimal(0.08)), Add([23, 22]), LtEq([10, 24]), Sub([23, 22]), GtEq([10, 26]), And([27, 25]), Constant(Interval(Interval { months: 12, days: 0, ms: 0 })), Constant(Date(Date(8766))), Add([30, 29]), Lt([6, 31]), GtEq([6, 30]), And([33, 32]), And([34, 28]), And([35, 21]), Filter([36, 19]), Mul([11, 10]), Sum(38), List([39]), Agg([40, 37]), Filter([0, 41]), List([]), Order([43, 42]), Ref(39), List([45]), Proj([46, 44]), Constant(Int32(0)), Constant(Null), Limit([49, 48, 47])] }
 \end{exprlisting}
 
 \textbf{Stage 3:}
-
 \begin{exprlisting}
-    "RecExpr { nodes: [Constant(Bool(true)), Column($0.2), Column($0.0), List([2, 1]), Table($0), Scan([4, 3, 0]), Column($2.4), Column($2.0), List([7, 6]), Table($2), Scan([9, 8, 0]), Constant(String(""ECONOMY ANODIZED STEEL"")), Eq([6, 11]), Filter([12, 10]), List([7]), Proj([14, 13]), Column($5.3), Column($5.0), List([17, 16]), Table($5), Scan([19, 18, 0]), Column($6.4), Column($6.1), Column($6.0), List([23, 22, 21]), Table($6), Scan([25, 24, 0]), Constant(Date(Date(9131))), GtEq([21, 27]), Constant(Date(Date(9861))), GtEq([29, 21]), And([30, 28]), Filter([31, 26]), List([17]), List([22]), Inner, HashJoin([35, 0, 34, 33, 32, 20]), List([23, 21, 16]), Proj([37, 36]), Column($7.6), Column($7.5), Column($7.2), Column($7.1), Column($7.0), List([43, 42, 41, 40, 39]), Table($7), Scan([45, 44, 0]), Column($3.3), Column($3.0), List([48, 47]), Table($3), Scan([50, 49, 0]), List([41]), List([48]), HashJoin([35, 0, 53, 52, 51, 46]), List([47, 43, 42, 40, 39]), Proj([55, 54]), List([23]), List([43]), HashJoin([35, 0, 58, 57, 56, 38]), List([47, 42, 40, 39, 21, 16]), Proj([60, 59]), List([42]), HashJoin([35, 0, 62, 14, 61, 15]), List([47, 40, 39, 21, 16]), Proj([64, 63]), List([2]), List([16]), HashJoin([35, 0, 67, 66, 65, 5]), List([47, 40, 39, 21, 1]), Proj([69, 68]), Column($0.1(1)), Column($0.0(1)), List([72, 71]), Scan([4, 73, 0]), List([47]), List([72]), HashJoin([35, 0, 76, 75, 74, 70]), Column($1.1), Column($1.0), List([79, 78]), Table($1), Scan([81, 80, 0]), Constant(String(""AMERICA"")), Eq([78, 83]), Filter([84, 82]), List([79]), Proj([86, 85]), List([1]), HashJoin([35, 0, 86, 88, 87, 77]), Constant(Int32(1)), Sub([90, 39]), Mul([40, 91]), Field(DateTimeField(Year)), Extract([93, 21]), List([94, 92, 71]), Proj([95, 89]), Ref(92), Sum(97), Constant(Int32(0)), Type(Decimal(Some(30), Some(4))), Cast([100, 99]), Constant(String(""IRAQ"")), Eq([71, 102]), If([103, 97, 101]), Sum(104), List([105, 98]), Ref(94), List([107]), HashAgg([108, 106, 96]), Order([108, 109]), Ref(98), Ref(105), Div([112, 111]), List([107, 113]), Proj([114, 110])] }"
+RecExpr { nodes: [Constant(Bool(true)), Column($7.10), Column($7.6), Column($7.5), Column($7.4), List([4, 3, 2, 1]), Table($7), Scan([6, 5, 0]), Constant(Date(Date(8766))), GtEq([1, 8]), Constant(Date(Date(9131))), Gt([10, 1]), And([11, 9]), Constant(Int32(24)), Gt([13, 4]), And([14, 12]), Filter([15, 7]), List([3, 2]), Proj([17, 16]), Constant(Decimal(0.07)), GtEq([2, 19]), Constant(Decimal(0.09)), GtEq([21, 2]), And([22, 20]), Filter([23, 18]), Mul([2, 3]), Sum(25), List([26]), Agg([27, 24]), Ref(26), List([29]), Proj([30, 28])] }
 \end{exprlisting}
-
-Once again, the optimizer proved its efficiency, since the number of nodes decreased from 151 to 115 during the optimization process, which represents a reduction of about 24\%.
-
-Let's take a deeper look at the information we can extract during the optimization process. \\
-
-\subsection{Expression Groups}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.80\linewidth]{img/expression_groups/q8_expression_groups.png}
-    \caption{Query 8 - Expression Groups}
-    \label{fig:exprgroups8}
-\end{figure}
-The histogram above displays the number of expression groups generated at each stage of the optimization process. Within each group, there may be an unknown number of equivalent expressions. \\
-As we can see, the number of expression groups generated during stage 3 is significantly higher than in stage 2. This is a common pattern observed in the optimization process, where the optimizer explores a larger number of equivalent expressions in later stages. \\
-This increase in expression groups is often accompanied by a decrease in the overall cost of the query, as the optimizer applies various transformations and optimizations to find more efficient execution plans. \\
-This is also reflected in the histogram of cost reduction (Figure \ref{fig:cost1}), where we can see that the decrease in cost is more accentuated when we move from stage 2 to stage 3. \\
-This is the stage where the optimizer applies the join reordering and hash join rules. \\
-
-\subsection{Rule Application}
-
-The rules set to be applied during stage 3 are the same as in \textbf{Query 2}, and they are defined in the \texttt{src/planner/rules/plan.rs} file. \\
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.95\linewidth]{img/img_rule_mostpop/top_5_rules_stage3_q8.png}
-    \caption{Query 8 - Rules in Stage 3}
-    \label{fig:rules8}
-\end{figure}
-
-The most frequently applied rules are related to join operations and projection pushdown. This aligns with our understanding that stage 3 focuses heavily on optimizing joins and their order of execution.
-The high frequency of join-related rule applications explains the increase in expression groups, as each new join order or implementation strategy generates new equivalent expressions. Despite this increase in complexity, the optimizer successfully reduces the query's cost through these transformations.
-
-
-\subsection{Merge Operations}
-During stage 3, the optimizer applies join reordering rules and other transformations that generate a large number of new equivalent expressions. Each new join order or execution strategy can result in different representations for the same logical operation. As a consequence, the number of expression groups grows rapidly. \\
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\linewidth]{img_merges/q8_sizes.png}
-    \caption{Query 8 - Merge operations}
-    \label{fig:hist8}
-\end{figure}
-
-
-
-
-\chapter{Final Conclusions and Future Work} \label{chap:concl}
-\thispagestyle{fancy}
-This report describes our process of analyzing and visualizing the behavior of a SQL query optimizer through the instrumentation of the Risinglight database system. The project successfully achieved the objectives outlined in the introduction, providing valuable insights into the complex process of query optimization.
-
-Our visual representations have made it possible to observe patterns and behaviors that would be difficult to discern from raw data alone. The analysis of expression groups, relational operators, and cost estimates has deepened our understanding of how different queries are optimized.
-
-Some key findings from our analysis include:
-\begin{itemize}
-    \item The relationship between query complexity and the number of expression groups generated
-    \item Common transformation patterns applied by the optimizer for specific query constructs
-    \item Situations where cost estimates may not accurately reflect actual execution performance
-\end{itemize}
-
-While we believe that our project meets the requirements initially set, there is still room for future work. Potential extensions include:
-\begin{itemize}
-    \item Dynamic visualizations that show the step-by-step progression of the optimization process
-    \item Interactive tools that allow users to modify queries and immediately see the impact on optimization
-    \item Deeper analysis of specific optimization techniques, such as join reordering or predicate pushdown
-    \item Integration with actual execution statistics to evaluate the effectiveness of optimization decisions
-\end{itemize}
-
-Overall, this project has provided valuable insights into query optimization and established a foundation for further research in this area.
-
-\appendix
-
-\chapter{Appendix}
-\thispagestyle{fancy}
 
 \section{README}
 
@@ -596,12 +651,16 @@ In order to run the project, you can make use of the \texttt{run.sh} script we d
 \end{itemize}
 
 \section{References}
+These are the most important concepts and tools we used while developing this project. \\
+These concepts are essential for understanding the context of our work and the technologies used.
+
 \begin{itemize}
     \item \textbf{Risinglight:} Risinglight is an open-source SQL database system designed for educational purposes. It is built on top of the Rust programming language and aims to provide high performance and scalability for data processing tasks.
     \item \textbf{Egg library:} Egg is a Rust library for writing and manipulating e-graphs. It provides a framework for implementing various optimization techniques, including those used in query optimization.
     \item \textbf{E-graphs:} E-graphs are data structures used to represent and optimize expressions in a way that allows for efficient manipulation and transformation. They are particularly useful in the context of query optimization, where multiple equivalent expressions may exist.
     \item \textbf{SQL:} SQL (Structured Query Language) is a standard programming language used for managing and manipulating relational databases. It allows users to perform various operations, such as querying data, inserting records, updating information, and deleting entries.
     \item \textbf{Query Optimization:} Query optimization is the process of transforming a SQL query into an efficient execution plan. It involves analyzing the query structure, applying various optimization techniques, and selecting the best plan based on cost estimates.
+    \item \textbf{Cost Model:} A cost model is a mathematical representation used to estimate the resource consumption (e.g., time, memory) of different query execution plans.
     \item \textbf{Relational Algebra:} Relational algebra is a formal system for manipulating relations (tables) in a database. It provides a set of operations, such as selection, projection, and join, that can be used to express queries and transformations on relational data.
     \item \textbf{TPC-H:} TPC-H is a widely used benchmark for evaluating the performance of database systems. It consists of a set of complex SQL queries that simulate real-world data processing scenarios, allowing researchers and developers to assess the efficiency of their systems.
     \item \textbf{Python:} Python is a high-level programming language known for its simplicity and readability. It is widely used for data analysis, visualization, and scripting tasks. In this project, Python was used to generate histograms and visualize the optimization process.
