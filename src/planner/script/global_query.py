@@ -69,38 +69,32 @@ def calculate_cost_differences():
     
     # Passo 2: Carregar os custos finais (do último estágio)
     final_costs = {}
-    final_cost_dir = "src/planner/outputs/total_costs/"
-    total_cost_files = glob.glob(os.path.join(final_cost_dir, "q*_total_cost.csv"))
-    
     print("\nCarregando custos finais:")
-    for file in total_cost_files:
+    for file in all_data_files:  # Usar os mesmos arquivos filtrados
         try:
             # Extrair o número da query do nome do arquivo
             query_match = re.search(r'q(\d+)_', os.path.basename(file))
             if not query_match:
                 continue
-                
+
             query_num = int(query_match.group(1))
             query_name = f"Q{query_num}"
-            
+
             # Ler o arquivo CSV
             df = pd.read_csv(file)
-            
-            # Verificar as colunas disponíveis
-            print(f"  Arquivo {os.path.basename(file)} tem colunas: {', '.join(df.columns)}")
-            
-            if len(df) > 0:
-                if 'Stage_3_Cost' in df.columns:
-                    final_cost = pd.to_numeric(df['Stage_3_Cost'].iloc[0], errors='coerce')
+
+            # Procurar o maior estágio disponível
+            if 'Stage' in df.columns and 'Custo' in df.columns:
+                max_stage = df['Stage'].max()
+                final_row = df[df['Stage'] == max_stage]
+                if len(final_row) > 0:
+                    final_cost = pd.to_numeric(final_row['Custo'].iloc[0], errors='coerce')
                     if not pd.isna(final_cost):
                         final_costs[query_num] = final_cost
-                        print(f"  {query_name}: Custo final = {final_cost:.2f} (da coluna Stage_3_Cost)")
+                        print(f"  {query_name}: Custo final = {final_cost:.2f} (Stage {max_stage})")
                         continue
-                
-            
-                # Se chegamos aqui, não conseguimos encontrar o custo final
-                print(f"  {query_name}: Não foi possível determinar o custo final")
-        
+
+            print(f"  {query_name}: Não foi possível determinar o custo final")
         except Exception as e:
             print(f"  Erro ao processar custo final em {file}: {e}")
             import traceback
@@ -206,7 +200,7 @@ def plot_cost_reduction(cost_differences):
     max_cost = max(max(initial_costs), max(stage2_values), max(final_costs))
     
     # Configurar eixos e legendas
-    ax.set_title('Cost Reduction by Query', fontsize=16)
+    #ax.set_title('Cost Reduction by Query', fontsize=16)
     ax.set_xlabel('Query', fontsize=14)
     ax.set_ylabel('Cost', fontsize=14)
     ax.set_xticks(x)

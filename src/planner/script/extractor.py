@@ -21,15 +21,21 @@ def extract_last_four(input_file):
         reader = csv.reader(file)
         header = next(reader)  # Store header
         rows = list(reader)    # Convert rest of file to list
-        
-        # Get last 4 rows
-        last_four = rows[-4:]
+
+        # Special case for query 15
+        if "15" in input_base:
+            # Remove last 4 rows, then get the next 4 (the query costs)
+            rows = rows[:-4]
+            last_rows = rows[-4:]
+        else:
+            # Default: get last 4 rows
+            last_rows = rows[-4:]
 
     # Write to new file
     with open(output_file, 'w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         writer.writerow(header)     # Write header
-        writer.writerows(last_four) # Write last 4 rows
+        writer.writerows(last_rows) # Write selected rows
 
     print(f"✅ Data saved to {output_file}")
 
