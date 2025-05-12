@@ -435,8 +435,9 @@ This transformation alone was applied 658 times during stage 3 optimization of Q
 
 \subsection{Merge Operations}
 
-The merge operations are a specific type of transformation applied by the optimizer to combine equivalent expressions into a single representation. \\
-In this section, it's expected to see a large increase in the number of merge operations. The rapid increase in expression groups, means there are new ways to represent the expression presented in the initial stage, which makes us wonder if this is actually helping minimize the cost of a query. The answer is yes, because in this group of new expressions, the optimizer will find new equivalent expressions and will merge them into the same one. ?? \\
+
+During stage 3, the optimizer applies join reordering rules and other transformations that generate a large number of new equivalent expressions. Each new join order or execution strategy can result in different representations for the same logical operation. As a consequence, the number of expression groups grows rapidly. \\
+However, many of these new expressions end up being semantically equivalent to each other. The merge mechanism of the optimizer serves precisely to identify and merge these equivalent expressions into a single group, reducing redundancy in the e-graph. Therefore, a significant increase in the number of merge operations is expected at this stage, reflecting the intense exploration of execution plan space and the subsequent consolidation of equivalent expressions.
 
 
 \begin{figure}[H]
@@ -451,6 +452,104 @@ Here we can see that the optimizer has the expected behavior: The number of merg
 This histogram also has some interesting information about the number of equivalence classes and the number of unique nodes. Each equivalence class represents a group in which all the expressions are equivalent, while each node is an unique expression, for example, the expression \texttt{"a+b"} is a possible node.\\ 
 However, \texttt{"b+a"} can also be a node, but since they represent the same operation, they can be merged into a single equivalence class. \\
 This is the reason for the difference between the number of equivalence classes and the number of unique nodes, in stages where the growth of expression groups is more accentuated. \\
+
+\section{Query 8}
+\begin{lstlisting}
+    select
+    o_year,
+    sum(case
+        when nation = 'IRAQ' then volume
+        else 0
+    end) / sum(volume) as mkt_share
+from
+    (
+        select
+            extract(year from o_orderdate) as o_year,
+            l_extendedprice * (1 - l_discount) as volume,
+            n2.n_name as nation
+        from
+            part,
+            supplier,
+            lineitem,
+            orders,
+            customer,
+            nation n1,
+            nation n2,
+            region
+        where
+            p_partkey = l_partkey
+            and s_suppkey = l_suppkey
+            and l_orderkey = o_orderkey
+            and o_custkey = c_custkey
+            and c_nationkey = n1.n_nationkey
+            and n1.n_regionkey = r_regionkey
+            and r_name = 'AMERICA'
+            and s_nationkey = n2.n_nationkey
+            and o_orderdate between date '1995-01-01' and date '1996-12-31'
+            and p_type = 'ECONOMY ANODIZED STEEL'
+    ) as all_nations
+group by
+    o_year
+order by
+    o_year;
+\end{lstlisting}
+
+\subsubsection{Relational Expression}
+\textbf{Stage 0:}
+\begin{exprlisting}
+    "RecExpr { nodes: [Constant(Bool(true)), Column($1.2), Column($1.1), Column($1.0), List([3, 2, 1]), Table($1), Scan([5, 4, 0]), Column($0.3(1)), Column($0.2(1)), Column($0.1(1)), Column($0.0(1)), List([10, 9, 8, 7]), Table($0), Scan([12, 11, 0]), Column($0.3), Column($0.2), Column($0.1), Column($0.0), List([17, 16, 15, 14]), Scan([12, 18, 0]), Column($5.7), Column($5.6), Column($5.5), Column($5.4), Column($5.3), Column($5.2), Column($5.1), Column($5.0), List([27, 26, 25, 24, 23, 22, 21, 20]), Table($5), Scan([29, 28, 0]), Column($6.8), Column($6.7), Column($6.6), Column($6.5), Column($6.4), Column($6.3), Column($6.2), Column($6.1), Column($6.0), List([39, 38, 37, 36, 35, 34, 33, 32, 31]), Table($6), Scan([41, 40, 0]), Column($7.15), Column($7.14), Column($7.13), Column($7.12), Column($7.11), Column($7.10), Column($7.9), Column($7.8), Column($7.7), Column($7.6), Column($7.5), Column($7.4), Column($7.3), Column($7.2), Column($7.1), Column($7.0), List([58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 43]), Table($7), Scan([60, 59, 0]), Column($3.6), Column($3.5), Column($3.4), Column($3.3), Column($3.2), Column($3.1), Column($3.0), List([68, 67, 66, 65, 64, 63, 62]), Table($3), Scan([70, 69, 0]), Column($2.8), Column($2.7), Column($2.6), Column($2.5), Column($2.4), Column($2.3), Column($2.2), Column($2.1), Column($2.0), List([80, 79, 78, 77, 76, 75, 74, 73, 72]), Table($2), Scan([82, 81, 0]), Inner, Join([84, 0, 83, 71]), Join([84, 0, 85, 61]), Join([84, 0, 86, 42]), Join([84, 0, 87, 30]), Join([84, 0, 88, 19]), Join([84, 0, 89, 13]), Join([84, 0, 90, 6]), Constant(String(""ECONOMY ANODIZED STEEL"")), Eq([76, 92]), Constant(Date(Date(9861))), LtEq([35, 94]), Constant(Date(Date(9131))), GtEq([35, 96]), And([97, 95]), Eq([65, 10]), Constant(String(""AMERICA"")), Eq([2, 100]), Eq([15, 3]), Eq([24, 17]), Eq([38, 27]), Eq([58, 39]), Eq([68, 56]), Eq([80, 57]), And([107, 106]), And([108, 105]), And([109, 104]), And([110, 103]), And([111, 102]), And([112, 101]), And([113, 99]), And([114, 98]), And([115, 93]), Filter([116, 91]), Filter([0, 117]), List([]), Order([119, 118]), Constant(Int32(1)), Sub([121, 52]), Mul([53, 122]), Field(DateTimeField(Year)), Extract([124, 35]), List([125, 123, 9]), Proj([126, 120]), Constant(Int32(0)), Constant(Null), Limit([129, 128, 127]), Filter([0, 130]), Ref(123), Sum(132), Type(Decimal(Some(30), Some(4))), Cast([134, 128]), Constant(String(""IRAQ"")), Eq([9, 136]), If([137, 132, 135]), Sum(138), List([139, 133]), Ref(125), List([141]), HashAgg([142, 140, 131]), Filter([0, 143]), Order([142, 144]), Ref(133), Ref(139), Div([147, 146]), List([141, 148]), Proj([149, 145]), Limit([129, 128, 150])] }"
+\end{exprlisting}
+
+\textbf{Stage 3:}
+
+\begin{exprlisting}
+    "RecExpr { nodes: [Constant(Bool(true)), Column($0.2), Column($0.0), List([2, 1]), Table($0), Scan([4, 3, 0]), Column($2.4), Column($2.0), List([7, 6]), Table($2), Scan([9, 8, 0]), Constant(String(""ECONOMY ANODIZED STEEL"")), Eq([6, 11]), Filter([12, 10]), List([7]), Proj([14, 13]), Column($5.3), Column($5.0), List([17, 16]), Table($5), Scan([19, 18, 0]), Column($6.4), Column($6.1), Column($6.0), List([23, 22, 21]), Table($6), Scan([25, 24, 0]), Constant(Date(Date(9131))), GtEq([21, 27]), Constant(Date(Date(9861))), GtEq([29, 21]), And([30, 28]), Filter([31, 26]), List([17]), List([22]), Inner, HashJoin([35, 0, 34, 33, 32, 20]), List([23, 21, 16]), Proj([37, 36]), Column($7.6), Column($7.5), Column($7.2), Column($7.1), Column($7.0), List([43, 42, 41, 40, 39]), Table($7), Scan([45, 44, 0]), Column($3.3), Column($3.0), List([48, 47]), Table($3), Scan([50, 49, 0]), List([41]), List([48]), HashJoin([35, 0, 53, 52, 51, 46]), List([47, 43, 42, 40, 39]), Proj([55, 54]), List([23]), List([43]), HashJoin([35, 0, 58, 57, 56, 38]), List([47, 42, 40, 39, 21, 16]), Proj([60, 59]), List([42]), HashJoin([35, 0, 62, 14, 61, 15]), List([47, 40, 39, 21, 16]), Proj([64, 63]), List([2]), List([16]), HashJoin([35, 0, 67, 66, 65, 5]), List([47, 40, 39, 21, 1]), Proj([69, 68]), Column($0.1(1)), Column($0.0(1)), List([72, 71]), Scan([4, 73, 0]), List([47]), List([72]), HashJoin([35, 0, 76, 75, 74, 70]), Column($1.1), Column($1.0), List([79, 78]), Table($1), Scan([81, 80, 0]), Constant(String(""AMERICA"")), Eq([78, 83]), Filter([84, 82]), List([79]), Proj([86, 85]), List([1]), HashJoin([35, 0, 86, 88, 87, 77]), Constant(Int32(1)), Sub([90, 39]), Mul([40, 91]), Field(DateTimeField(Year)), Extract([93, 21]), List([94, 92, 71]), Proj([95, 89]), Ref(92), Sum(97), Constant(Int32(0)), Type(Decimal(Some(30), Some(4))), Cast([100, 99]), Constant(String(""IRAQ"")), Eq([71, 102]), If([103, 97, 101]), Sum(104), List([105, 98]), Ref(94), List([107]), HashAgg([108, 106, 96]), Order([108, 109]), Ref(98), Ref(105), Div([112, 111]), List([107, 113]), Proj([114, 110])] }"
+\end{exprlisting}
+
+Once again, the optimizer proved its efficiency, since the number of nodes decreased from 151 to 115 during the optimization process, which represents a reduction of about 24\%.
+
+Let's take a deeper look at the information we can extract during the optimization process. \\
+
+\subsection{Expression Groups}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.80\linewidth]{img/expression_groups/q8_expression_groups.png}
+    \caption{Query 8 - Expression Groups}
+    \label{fig:exprgroups8}
+\end{figure}
+The histogram above displays the number of expression groups generated at each stage of the optimization process. Within each group, there may be an unknown number of equivalent expressions. \\
+As we can see, the number of expression groups generated during stage 3 is significantly higher than in stage 2. This is a common pattern observed in the optimization process, where the optimizer explores a larger number of equivalent expressions in later stages. \\
+This increase in expression groups is often accompanied by a decrease in the overall cost of the query, as the optimizer applies various transformations and optimizations to find more efficient execution plans. \\
+This is also reflected in the histogram of cost reduction (Figure \ref{fig:cost1}), where we can see that the decrease in cost is more accentuated when we move from stage 2 to stage 3. \\
+This is the stage where the optimizer applies the join reordering and hash join rules. \\
+
+\subsection{Rule Application}
+
+The rules set to be applied during stage 3 are the same as in \textbf{Query 2}, and they are defined in the \texttt{src/planner/rules/plan.rs} file. \\
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{img/img_rule_mostpop/top_5_rules_stage3_q8.png}
+    \caption{Query 8 - Rules in Stage 3}
+    \label{fig:rules8}
+\end{figure}
+
+The most frequently applied rules are related to join operations and projection pushdown. This aligns with our understanding that stage 3 focuses heavily on optimizing joins and their order of execution.
+The high frequency of join-related rule applications explains the increase in expression groups, as each new join order or implementation strategy generates new equivalent expressions. Despite this increase in complexity, the optimizer successfully reduces the query's cost through these transformations.
+
+
+\subsection{Merge Operations}
+During stage 3, the optimizer applies join reordering rules and other transformations that generate a large number of new equivalent expressions. Each new join order or execution strategy can result in different representations for the same logical operation. As a consequence, the number of expression groups grows rapidly. \\
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{img_merges/q8_sizes.png}
+    \caption{Query 8 - Merge operations}
+    \label{fig:hist8}
+\end{figure}
+
+
 
 
 \chapter{Final Conclusions and Future Work} \label{chap:concl}
