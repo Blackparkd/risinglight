@@ -1,7 +1,6 @@
 import csv
 import matplotlib.pyplot as plt
 import numpy as np
-import sys
 import os
 
 def create_graph(file_path):
@@ -72,7 +71,7 @@ def create_graph(file_path):
     # Configure labels and title
     ax.set_ylabel('Values')
     ax.set_xlabel('Optimization Stages')
-    ax.set_title('Metrics')
+    ax.set_title(f'Metrics for Query {query_num}')
     ax.set_xticks(x + width, stages)
     ax.legend(
         loc='upper center', 
@@ -102,13 +101,23 @@ def create_graph(file_path):
     # Show the plot
     #plt.show() -> Para já so quero guardar a imagem
 
-def main():
-    if len(sys.argv) <= 1:
-        print("❌ No file path provided")
+def process_all_files():
+    input_dir = "src/planner/outputs/filtered_query_data"
+    if not os.path.exists(input_dir):
+        print(f"❌ Input directory not found: {input_dir}")
         return
-        
-    file_path = sys.argv[1].strip()
-    create_graph(file_path)
+
+    # Process all files in the directory
+    for file_name in os.listdir(input_dir):
+        if file_name.endswith("_data_filtered.csv"):
+            file_path = os.path.join(input_dir, file_name)
+            print(f"🔍 Processing file: {file_path}")
+            create_graph(file_path)
+        else:
+            print(f"⚠️ Skipping non-matching file: {file_name}")
+
+def main():
+    process_all_files()
 
 if __name__ == "__main__":
     main()

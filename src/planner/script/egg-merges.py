@@ -2,11 +2,10 @@ import os
 import csv
 import matplotlib.pyplot as plt
 import numpy as np
-import sys
 
 # Creates a histogram visualizing merge operations per stage for a specific query
 def create_merge_histogram(query_folder):
-    input_file = f"src/planner/outputs/egg-merges/{query_folder}_data/egg_merges.csv"
+    input_file = f"src/planner/outputs/egg-merges/{query_folder}/egg_merges.csv"
     output_dir = f"src/planner/outputs/graphs/egg-merges/{query_folder}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -16,8 +15,16 @@ def create_merge_histogram(query_folder):
 
     with open(input_file, 'r', encoding='utf-8') as file:
         reader = csv.reader(file)
-        header = next(reader)
+        header = next(reader, None)  # Read the header
+        if not header or len(header) < 4:
+            print(f"⚠️ Invalid or empty file: {input_file}")
+            return
+
         rows = list(reader)
+        if len(rows) < 4:
+            print(f"⚠️ Not enough data in file: {input_file}")
+            return
+
         last_four = rows[-4:]
 
     stages = []
@@ -26,6 +33,9 @@ def create_merge_histogram(query_folder):
     unique_nodes = []
 
     for row in last_four:
+        if len(row) < 4:
+            print(f"⚠️ Skipping malformed row: {row}")
+            continue
         stages.append(int(row[0]))
         merge_counts.append(int(row[1]))
         unique_nodes.append(int(row[2]))      # hc size
@@ -70,17 +80,24 @@ def create_merge_histogram(query_folder):
     plt.close()
     print(f"✅ Size comparison plot saved as: {output_path}")
 
-# Main entry point - processes command line arguments and calls the histogram function
-def main():
-    if len(sys.argv) <= 1:
-        print("❌ Usage: python3 egg-merges.py <query_number>")
-        print("Example: python3 egg-merges.py 1")
-        return
-        
-    query_number = sys.argv[1].strip()
-    query_folder = f"q{query_number}"
 
-    create_merge_histogram(query_folder)
+# Process all queries in the directory
+def process_all_queries():
+    input_dir = "src/planner/outputs/egg-merges"
+    if not os.path.exists(input_dir):
+        print(f"❌ Input directory not found: {input_dir}")
+        return
+
+    for query_folder in os.listdir(input_dir):
+        if query_folder.startswith("q"):
+            print(f"🔍 Processing egg merges for query {query_folder}...")
+            create_merge_histogram(query_folder)
+
+
+# Main entry point
+def main():
+    process_all_queries()
+
 
 if __name__ == "__main__":
     main()

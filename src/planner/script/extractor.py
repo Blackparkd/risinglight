@@ -40,14 +40,24 @@ def extract_last_four(input_file):
     print(f"✅ Data saved to {output_file}")
 
 
+def process_all_queries():
+    # Base directory for input files
+    input_dir = "src/planner/outputs/query_data"
+    if not os.path.exists(input_dir):
+        print(f"❌ Input directory not found: {input_dir}")
+        return
+
+    # Process all query files in the directory
+    for file_name in os.listdir(input_dir):
+        if file_name.endswith("_data.csv"):
+            input_file = os.path.join(input_dir, file_name)
+            print(f"Processing file: {input_file}")
+            extract_last_four(input_file)
+
 
 def main():
-    if len(sys.argv) <= 1:
-        print("❌ No file path provided")
-        return
-        
-    file_path = sys.argv[1].strip()
-    extract_last_four(file_path)
+    process_all_queries()
+
 
 if __name__ == "__main__":
     main()

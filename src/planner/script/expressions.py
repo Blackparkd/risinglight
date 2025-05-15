@@ -10,21 +10,21 @@ def plot_expression_groups(csv_file, output_dir):
     try:
         df = pd.read_csv(csv_file)
         if 'Stage' not in df.columns or 'Classes_Total' not in df.columns:
-            print(f"Colunas necessárias não encontradas em {csv_file}")
+            print(f"❌ Required columns not found in {csv_file}")
             return
 
-        # Ordenar por Stage para garantir ordem correta no gráfico
+        # Sort by Stage to ensure correct order in the plot
         df = df.sort_values('Stage')
         stages = df['Stage'].astype(str)
         classes = df['Classes_Total']
 
-        # Alterar o esquema de cores e adicionar borda preta
+        # Customize color scheme and add black border
         plt.figure(figsize=(8, 6))
         bars = plt.bar(stages, classes, color=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b'], edgecolor='black', linewidth=1.2)
         plt.xlabel('Stage')
         plt.ylabel('Expression Groups')
 
-        # Adicionar os valores no topo das barras
+        # Add values on top of the bars
         for i, v in enumerate(classes):
             plt.text(i, v + max(classes)*0.01, str(v), ha='center', va='bottom', fontsize=10)
 
@@ -34,22 +34,27 @@ def plot_expression_groups(csv_file, output_dir):
         output_path = os.path.join(output_dir, f"{query_name}_expression_groups.png")
         plt.savefig(output_path, dpi=300)
         plt.close()
-        print(f"Gráfico salvo em {output_path}")
+        print(f"✅ Plot saved at {output_path}")
 
     except Exception as e:
-        print(f"Erro ao processar {csv_file}: {e}")
+        print(f"❌ Error processing {csv_file}: {e}")
 
 def main():
     base_dir = os.path.join("src", "planner", "outputs", "filtered_query_data")
     output_dir = os.path.join("src", "planner", "outputs", "graphs", "expression_groups")
-    queries = ['q2', 'q5', 'q6' , 'q7', 'q8', 'q9']
 
-    for query in queries:
-        csv_file = os.path.join(base_dir, f"{query}_data_filtered.csv")
-        if os.path.exists(csv_file):
+    if not os.path.exists(base_dir):
+        print(f"❌ Base directory not found: {base_dir}")
+        return
+
+    # Process all query files in the directory
+    for file_name in os.listdir(base_dir):
+        if file_name.endswith("_data_filtered.csv"):
+            csv_file = os.path.join(base_dir, file_name)
+            print(f"🔍 Processing file: {csv_file}")
             plot_expression_groups(csv_file, output_dir)
         else:
-            print(f"Arquivo não encontrado: {csv_file}")
+            print(f"⚠️ Skipping non-matching file: {file_name}")
 
 if __name__ == "__main__":
     main()

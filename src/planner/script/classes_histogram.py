@@ -10,116 +10,6 @@ from collections import Counter
 # ver tipos de nós mais populares -> apenas para nós relacionais - já se tem a informação no csv
 
 
-def create_histogram(query_folder, stage):
-    # Construct input file path
-    input_file = f"src/planner/outputs/filtered_class_data/query_{query_folder}/stage{stage}_filtered.csv"
-
-    # Create output directory if it doesn't exist
-    output_dir = "src/planner/outputs/graphs/node_distribution"
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    
-    # Verify if file exists
-    if not os.path.exists(input_file):
-        print(f"❌ File not found: {input_file}")
-        return
-
-    # Lists to store values
-    class_ids = []
-    node_counts = []
-
-    # Read CSV and store values
-    with open(input_file, mode="r", encoding="utf-8") as file:
-        reader = csv.DictReader(file)
-        for row in reader:
-            class_ids.append(int(row["Class_ID"]))
-            node_counts.append(int(row["Node_Count"]))
-
-    min_nodos = min(node_counts)
-    max_nodos = max(node_counts)
-
-    # Using plt.hist #
-    fig, ax = plt.subplots(figsize=(12, 6), layout='constrained')
-    fig.patch.set_facecolor('#478ac9')
-    ax.set_facecolor('#2e353b')
-    
-    # Calculate number of bins - adjust as needed
-    max_bins = min(20, max_nodos - min_nodos + 1)  # Limit bins to 20 or exact number of values
-    
-    # Após calcular bins e antes de criar o histograma
-    # Escolha um mapa de cores vibrante (você pode experimentar diferentes opções)
-    cmap = plt.cm.plasma  # Outras opções: plasma, inferno, magma, cividis, coolwarm
-
-    # Create histogram (sem definir a cor aqui)
-    counts, bins, patches = plt.hist(node_counts, bins=max_bins, 
-                                   edgecolor='white', alpha=1.0)
-
-    # Apply logarithmic scale to y-axis to make small bars more visible
-    ax.set_yscale('log')
-
-    # Color bars with a gradient based on bin centers
-    bin_centers = 0.5 * (bins[:-1] + bins[1:])
-    # Normalizar os valores para o intervalo [0, 1]
-    norm = plt.Normalize(min_nodos, max_nodos)
-    # Aplicar cores do mapa de cores para cada patch
-    for count, patch, center in zip(counts, patches, bin_centers):
-        color = cmap(norm(center))
-        patch.set_facecolor(color)
-        patch.set_edgecolor('white')
-        # Destacar barras com valores baixos (opcional)
-        if count <= 2:
-            patch.set_linewidth(2)
-    
-    # Add labels on bars
-    for count, center in zip(counts, bin_centers):
-        if count > 0:  # Only label non-empty bars
-            plt.text(center, count * 1.1, f'{int(count)}',  # Position slightly above the bar
-                    ha='center', va='bottom', color='white', fontweight='bold')
-    
-    # Configure labels and title
-    plt.xlabel('Nodes per class', color='white', fontsize=12)
-    plt.ylabel('Number of classes (log scale)', color='white', fontsize=12)  # Updated to indicate log scale
-    plt.title(f'Node distribution - Query {query_folder}, Stage {stage}',
-             color='white', pad=20, fontsize=14)
-    
-    # Add grid for better readability (with logscale, grid is especially helpful)
-    ax.grid(True, color='white', alpha=0.2, linestyle='--', which='both')  # 'both' shows major and minor grid lines
-    
-    # Style the axes
-    ax.tick_params(colors='white', labelsize=12)
-    for spine in ax.spines.values():
-        spine.set_color('white')
-        spine.set_linewidth(2)
-    
-    # Add statistics text
-    stats_text = (f'Total Classes: {len(class_ids)}\n'
-                 f'Min Nodes: {min(node_counts)}\n'
-                 f'Max Nodes: {max(node_counts)}\n'
-                 f'Avg Nodes: {np.mean(node_counts):.2f}')
-    
-    plt.text(0.95, 0.95, stats_text,
-             transform=ax.transAxes,
-             verticalalignment='top',
-             horizontalalignment='right',
-             bbox=dict(facecolor='#2e353b', edgecolor='#478ac9'),
-             color='white')
-             
-    # Save the plot
-    query_output_dir = os.path.join(output_dir, query_folder)
-    if not os.path.exists(query_output_dir):
-        os.makedirs(query_output_dir)
-    
-    output_path = os.path.join(query_output_dir, f"{query_folder}_stage{stage}_histogram.png")
-
-    plt.savefig(output_path, 
-                facecolor=fig.get_facecolor(), 
-                edgecolor='none',
-                bbox_inches='tight',
-                dpi=300)
-    
-    plt.close()
-    print(f"✅ Plot saved as: {output_path}")
-    
 
 ##########################################
 # RELATIONAL FLAGS PLOT START #
@@ -239,9 +129,6 @@ def create_relational_histogram(query_folder, stage):
     print(f"✅ Relational operators histogram saved as: {output_file}")
 
 
-
-
-
 ## MAIN ##
 def main():
     if len(sys.argv) <= 2:
@@ -252,7 +139,6 @@ def main():
     query_folder = sys.argv[1].strip()
     stage = sys.argv[2].strip()
 
-    create_histogram(query_folder, stage)
     create_relational_histogram(query_folder, stage)
 
 if __name__ == "__main__":
