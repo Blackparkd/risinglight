@@ -20,13 +20,19 @@ def plot_expression_groups(csv_file, output_dir):
 
         # Customize color scheme and add black border
         plt.figure(figsize=(8, 6))
-        bars = plt.bar(stages, classes, color=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b'], edgecolor='black', linewidth=1.2)
-        plt.xlabel('Stage')
-        plt.ylabel('Expression Groups')
+        bars = plt.bar(
+            stages,
+            classes,
+            color=["#4B0082", "#FC8B00", "#009E73", "#94004FFF"],
+            edgecolor='black',
+            linewidth=1.2
+        )
+        plt.xlabel('Stage', fontsize=12)
+        plt.ylabel('Expression Groups', fontsize=12)
 
         # Add values on top of the bars
         for i, v in enumerate(classes):
-            plt.text(i, v + max(classes)*0.01, str(v), ha='center', va='bottom', fontsize=10)
+            plt.text(i, v + max(classes) * 0.01, str(v), ha='center', va='bottom', fontsize=10)
 
         plt.tight_layout()
 

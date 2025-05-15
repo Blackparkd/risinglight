@@ -5,8 +5,10 @@ import numpy as np
 
 # Creates a histogram visualizing merge operations per stage for a specific query
 def create_merge_histogram(query_folder):
+    # Remove "_data" from the folder name for output
+    output_folder = query_folder.replace("_data", "")
     input_file = f"src/planner/outputs/egg-merges/{query_folder}/egg_merges.csv"
-    output_dir = f"src/planner/outputs/graphs/egg-merges/{query_folder}"
+    output_dir = f"src/planner/outputs/graphs/egg-merges/{output_folder}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     if not os.path.exists(input_file):
@@ -49,7 +51,7 @@ def create_merge_histogram(query_folder):
     ax.set_facecolor('white')
 
     bars1 = ax.bar(x - width, merge_counts, width, label='Number of Merge Operations', color='#4B0082')
-    bars2 = ax.bar(x, num_classes, width, label='Equivalence Classes', color='#0072B2')
+    bars2 = ax.bar(x, num_classes, width, label='Equivalence Classes', color="#FC8B00")
     bars3 = ax.bar(x + width, unique_nodes, width, label='Unique Nodes', color='#009E73')
 
     for bars in [bars1, bars2, bars3]:
@@ -71,7 +73,7 @@ def create_merge_histogram(query_folder):
         spine.set_linewidth(1)
 
     plt.legend(fontsize=13)
-    output_path = os.path.join(output_dir, f"{query_folder}_sizes.png")
+    output_path = os.path.join(output_dir, f"{output_folder}_sizes.png")
     plt.savefig(output_path,
                 facecolor=fig.get_facecolor(),
                 edgecolor='none',
