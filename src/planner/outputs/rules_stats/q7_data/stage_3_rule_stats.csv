@@ -22,10 +22,10 @@ Stage,Rule_Name,Total_Applications,Rank
 3,pushdown-join-condition-left,31,21
 3,pushdown-proj-proj,21,22
 3,hash-join-on-two-eq-rev,20,23
-3,pushdown-join-condition-left-1,10,24
-3,and-true,10,25
+3,and-true,10,24
+3,pushdown-join-condition-left-1,10,25
 3,eq-comm,9,26
-3,pushdown-proj-hashagg,2,27
-3,pushdown-proj-order,2,28
+3,pushdown-proj-order,2,27
+3,pushdown-proj-hashagg,2,28
 3,hash-join-on-three-eq-rev,2,29
 3,hash-join-on-three-eq,2,30

@@ -1,0 +1,17 @@
+Stage,Rule_Name,Total_Applications,Rank
+3,identical-proj,8,1
+3,filter-true,4,2
+3,pushdown-proj-hashagg,2,3
+3,pushdown-proj-order,2,4
+3,and-true,2,5
+3,pushdown-filter-proj,2,6
+3,pushdown-join-condition-right,2,7
+3,pushdown-join-condition-left,2,8
+3,hash-join-on-one-eq-rev,2,9
+3,and-comm,2,10
+3,filter-merge,1,11
+3,filter-split,1,12
+3,pushdown-proj-filter,1,13
+3,eq-comm,1,14
+3,hash-join-on-one-eq,1,15
+3,pushdown-proj-join,1,16

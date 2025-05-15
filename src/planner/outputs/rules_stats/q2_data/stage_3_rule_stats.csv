@@ -9,8 +9,8 @@ Stage,Rule_Name,Total_Applications,Rank
 3,filter-true,230,8
 3,inner-join-right-rotate-1,200,9
 3,inner-hash-join-swap,174,10
-3,hash-join-on-one-eq-rev,157,11
-3,pushdown-join-condition-right,157,12
+3,pushdown-join-condition-right,157,11
+3,hash-join-on-one-eq-rev,157,12
 3,hash-join-on-one-eq,137,13
 3,identical-proj,134,14
 3,pushdown-filter-inner-join,107,15
@@ -26,5 +26,5 @@ Stage,Rule_Name,Total_Applications,Rank
 3,hash-join-on-three-eq-rev,8,25
 3,pushdown-proj-proj,7,26
 3,filter-merge,5,27
-3,pushdown-proj-hashagg,1,28
-3,pushdown-proj-topn,1,29
+3,pushdown-proj-topn,1,28
+3,pushdown-proj-hashagg,1,29

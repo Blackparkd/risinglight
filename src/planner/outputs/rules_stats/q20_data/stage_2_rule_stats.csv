@@ -1,0 +1,13 @@
+Stage,Rule_Name,Total_Applications,Rank
+2,identical-proj,13,1
+2,pushdown-filter-proj,8,2
+2,pushdown-proj-filter,6,3
+2,eq-comm,6,4
+2,filter-split,4,5
+2,pushdown-proj-join,4,6
+2,gt-comm,2,7
+2,and-comm,2,8
+2,pushdown-proj-hashagg,1,9
+2,pushdown-proj-proj,1,10
+2,ge-comm,1,11
+2,mul-comm,1,12
