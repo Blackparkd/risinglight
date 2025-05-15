@@ -543,6 +543,72 @@ fn save_stage_expression(
 }
 
 
+/// Função para adicionar estatísticas sobre quais regras foram mais aplicadas ao final do arquivo
+fn append_rule_statistics(
+    stage: &str,
+    runner: &egg::Runner<Expr, ExprAnalysis, ()>,
+    output_file_base: &str
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Extrair o nome da consulta do caminho do arquivo base
+    let path = Path::new(output_file_base);
+    let file_stem = path.file_stem().unwrap_or_default().to_string_lossy();
+
+    // Criar o diretório para os dados de regras se não existir
+    let output_dir = format!("src/planner/outputs/rules_stats/{}", file_stem);
+    create_dir_all(&output_dir)?;
+
+    // Caminho para o arquivo CSV de saída
+    let output_path = format!("{}/stage_{}_rule_stats.csv", output_dir, stage);
+
+    // Coletar estatísticas agregadas sobre aplicações de regras
+    let mut rule_applications: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+
+    // Somar todas as aplicações de regras em todas as iterações
+    for iter_data in &runner.iterations {
+        for applied in &iter_data.applied {
+            let rule_name = applied.0.to_string();
+            let count = applied.1;
+            *rule_applications.entry(rule_name).or_insert(0) += count;
+        }
+    }
+
+    // Converter para um vetor e ordenar por número de aplicações (decrescente)
+    let mut rule_stats: Vec<(String, usize)> = rule_applications.into_iter().collect();
+    rule_stats.sort_by(|a, b| b.1.cmp(&a.1));
+
+    // Abrir o arquivo CSV para escrita (modo de adição)
+    let file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .append(true) // Adicionar ao final do arquivo
+        .open(&output_path)?;
+
+    let mut wtr = Writer::from_writer(file);
+
+    // Escrever cabeçalhos apenas se o arquivo estiver vazio
+    if Path::new(&output_path).metadata()?.len() == 0 {
+        wtr.write_record(&["Stage", "Rule_Name", "Total_Applications", "Rank"])?;
+    }
+
+    // Escrever dados ordenados
+    for (rank, (rule_name, applications)) in rule_stats.iter().enumerate() {
+        wtr.write_record(&[
+            stage,
+            rule_name,
+            &applications.to_string(),
+            &(rank + 1).to_string()
+        ])?;
+    }
+
+    // Garantir que os dados sejam gravados
+    wtr.flush()?;
+
+    println!("✅ Rule statistics appended to: {}", output_path);
+
+    Ok(())
+}
+
+
 
 // =============================== MY HELPERS - END ==================================================== //
 
@@ -602,21 +668,15 @@ impl Optimizer {
 
         // 1. pushdown apply 
         println!("\nStage 1\n");
-        self.optimize_stage(&mut expr, &mut cost, STAGE1_RULES.iter(), 2, 6, "1", &output_file);
-        let cost_stage_1 = cost; // Usar o custo atual em vez de egraph.analysis.cost
-        stage_costs.push(cost_stage_1);
+        self.optimize_stage(&mut expr, &mut cost, STAGE1_RULES.iter(), 2, 6, "1", &output_file, &file_stem);
 
         // 2. pushdown predicate and projection
         println!("\nStage 2\n");
-        self.optimize_stage(&mut expr, &mut cost, STAGE2_RULES.iter(), 4, 6, "2", &output_file);
-        let cost_stage_2 = cost; // Usar o custo atual em vez de egraph.analysis.cost
-        stage_costs.push(cost_stage_2);
+        self.optimize_stage(&mut expr, &mut cost, STAGE2_RULES.iter(), 4, 6, "2", &output_file, &file_stem);
 
         // 3. join reorder and hashjoin
         println!("\nStage 3\n");
-        self.optimize_stage(&mut expr, &mut cost, STAGE3_RULES.iter(), 3, 8, "3", &output_file);
-        let cost_stage_3 = cost; // Usar o custo atual em vez de egraph.analysis.cost
-        stage_costs.push(cost_stage_3);
+        self.optimize_stage(&mut expr, &mut cost, STAGE3_RULES.iter(), 3, 8, "3", &output_file, &file_stem);
 
         // Extrair o nome da query do arquivo de contexto atual
         let query_name = {
@@ -646,11 +706,12 @@ impl Optimizer {
         iter_limit: usize,
         stage: &str,
         output_file: &str,
+        file_stem: &str, // Adicionado
     ) {
         // printing expression
         println!("Stage {}: {}", stage, expr);
         println!("Cost: {}", cost);
-        
+
         for i in 0..iteration {
             let runner = egg::Runner::<_, _, ()>::new(self.analysis.clone())
                 .with_expr(expr)
@@ -661,13 +722,13 @@ impl Optimizer {
                 egraph: &runner.egraph,
             };
             let extractor = egg::Extractor::new(&runner.egraph, cost_fn);
-            let cost0;        
+            let cost0;
             (cost0, *expr) = extractor.find_best(runner.roots[0]);
-            
+
             *cost = cost0;
 
             // Get detailed class information
-            let (classes_eq, min_nodes, max_nodes, avg_nodes, class_infos) = 
+            let (classes_eq, min_nodes, max_nodes, avg_nodes, class_infos) =
                 visit_and_enumerate_alternatives(&runner.egraph);
 
             // Apenas guarda os dados na última iteração
@@ -683,21 +744,16 @@ impl Optimizer {
                     max_nodes,
                     avg_nodes,
                     output_file,
-                ).expect("Falha ao salvar no CSV");
+                )
+                .expect("Falha ao salvar no CSV");
 
                 // Save detailed class information
-                save_class_details(
-                    stage,
-                    &class_infos,
-                    output_file,
-                ).expect("Falha ao salvar detalhes das classes");
+                save_class_details(stage, &class_infos, output_file)
+                    .expect("Falha ao salvar detalhes das classes");
 
                 // Save rules application data
-                save_rules_data(
-                    stage,
-                    &runner,
-                    output_file,
-                ).expect("Falha ao guardar dados de aplicação de regras");
+                save_rules_data(stage, &runner, output_file)
+                    .expect("Falha ao guardar dados de aplicação de regras");
 
                 // Para ir buscar ao Egg o número de merges para esta última iteration
                 let merge_count = runner.egraph.get_merge_count();
@@ -708,22 +764,23 @@ impl Optimizer {
                 println!("NUM CLASSES: {}", n_classes);
                 save_egg_merges(stage, merge_count, hc_size, n_classes, output_file)
                     .expect("Falha ao guardar contador de merges e tamanhos");
-                
+
                 // Save the final expression
-                save_stage_expression(
-                    stage,
-                    expr,
-                    output_file,
-                ).expect("Falha ao guardar expressão final");
+                save_stage_expression(stage, expr, output_file)
+                    .expect("Falha ao guardar expressão final");
 
-                // Chamar a nova função de análise de regras
-                analyze_and_save_rule_statistics(
-                    stage,
-                    &runner,
-                    output_file
-                ).expect("Falha ao analisar estatísticas de regras");
-
-
+                // Chamar a função de análise de regras com base na query
+                if file_stem.starts_with("q15") {
+                    println!(
+                        "⚠️ Query 15 detected. Appending rule statistics for stage {}.",
+                        stage
+                    );
+                    append_rule_statistics(stage, &runner, output_file)
+                        .expect("Falha ao adicionar estatísticas de regras");
+                } else {
+                    analyze_and_save_rule_statistics(stage, &runner, output_file)
+                        .expect("Falha ao analisar estatísticas de regras");
+                }
             }
         }
     }
