@@ -8,8 +8,8 @@ Stage,Rule_Name,Total_Applications,Rank
 2,and-comm,2,7
 2,pushdown-proj-proj,2,8
 2,pushdown-filter-inner-join,2,9
-2,gt-comm,1,10
-2,pushdown-proj-hashagg,1,11
+2,mul-comm,1,10
+2,gt-comm,1,11
 2,pushdown-join-condition-left,1,12
 2,ge-comm,1,13
-2,mul-comm,1,14
+2,pushdown-proj-hashagg,1,14
