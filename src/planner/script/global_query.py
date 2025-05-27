@@ -160,7 +160,7 @@ def plot_cost_reduction(cost_differences):
         return
     
     # Criar o diretório de saída se não existir
-    output_dir = "src/planner/outputs/graphs/cost_reduction"
+    output_dir = "src/planner/outputs/bar_charts/cost_reduction"
     os.makedirs(output_dir, exist_ok=True)
     
     print("\n📊 Gerando gráfico de redução de custo para todas as queries...")

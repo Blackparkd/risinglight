@@ -5,7 +5,7 @@ import os
 
 # Base paths
 base_path = "src/planner/outputs/rules_stats"
-output_dir = "src/planner/outputs/graphs/rule_mostpop"
+output_dir = "src/planner/outputs/bar_charts/rule_mostpop"
 os.makedirs(output_dir, exist_ok=True)
 
 def process_query(query):

@@ -78,7 +78,7 @@ def create_rule_application_heatmap(df, query_folder, stage=None):
     
     # Save the heatmap
     stage_str = f"stage{stage}" if stage else "all_stages"
-    output_dir = f"src/planner/outputs/graphs/rules_stats/{query_folder}/{stage_str}"
+    output_dir = f"src/planner/outputs/bar_charts/rules_stats/{query_folder}/{stage_str}"
     os.makedirs(output_dir, exist_ok=True)
     output_path = f"{output_dir}/rule_heatmap.png"
     plt.tight_layout()

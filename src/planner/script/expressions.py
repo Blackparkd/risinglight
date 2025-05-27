@@ -47,7 +47,7 @@ def plot_expression_groups(csv_file, output_dir):
 
 def main():
     base_dir = os.path.join("src", "planner", "outputs", "filtered_query_data")
-    output_dir = os.path.join("src", "planner", "outputs", "graphs", "expression_groups")
+    output_dir = os.path.join("src", "planner", "outputs", "bar_charts", "expression_groups")
 
     if not os.path.exists(base_dir):
         print(f"❌ Base directory not found: {base_dir}")

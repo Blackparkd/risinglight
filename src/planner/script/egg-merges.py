@@ -8,7 +8,7 @@ def create_merge_histogram(query_folder):
     # Remove "_data" from the folder name for output
     output_folder = query_folder.replace("_data", "")
     input_file = f"src/planner/outputs/egg-merges/{query_folder}/egg_merges.csv"
-    output_dir = f"src/planner/outputs/graphs/egg-merges/{output_folder}"
+    output_dir = f"src/planner/outputs/bar_charts/egg-merges/{output_folder}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     if not os.path.exists(input_file):
