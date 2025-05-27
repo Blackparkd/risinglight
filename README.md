@@ -3,6 +3,11 @@
 -- Query Analyzer for RisingLight --
 This toolset provides comprehensive analysis capabilities for SQL query optimization in RisingLight.
 
+-- TODO --
+
+- Complete the discussion section
+- Change charts to new ones
+
 **How to Use the Query Analysis Script**
 The run.sh script offers a user-friendly interface for analyzing query performance and optimization processes.
 
