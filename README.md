@@ -6,7 +6,7 @@ This toolset provides comprehensive analysis capabilities for SQL query optimiza
 -- TODO --
 
 - Complete the discussion section
-- Change charts to new ones
+
 
 **How to Use the Query Analysis Script**
 The run.sh script offers a user-friendly interface for analyzing query performance and optimization processes.
