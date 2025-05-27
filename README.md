@@ -38,7 +38,7 @@ This will execute Query 5, extract all performance data, and generate all visual
 **Output Files**
 All analysis results are saved to src/planner/outputs/ with subdirectories for:
 
-- Cost histograms showing optimization progress across stages
+- Cost bar charts showing optimization progress across stages
 - CSV data files with detailed metrics
 - Equivalence class visualizations
 - Merge operation histograms
@@ -70,8 +70,8 @@ Stage,Custo,Relacionais,Classes_Total,Min,Max,Media
 3,14618.112,6,52,1,2,1.10
 
 ```
-- We already have histogram implementations for better analysis. Graphs in the following format:
-![Histogram](src/planner/outputs/graphs/query5_graph.png)
+- We already have histogram implementations for better analysis. Charts in the following format:
+![Histogram](src/planner/outputs/bar_charts/query5_graph.png)
 
 
 - We have information about each class and respective nodes. File structure is as follows:
@@ -92,12 +92,12 @@ Stage,Class_ID,Node_Count,Nodes
 3,11,3,"Scan([10, 9, 0]); Proj([9, 11]); Filter([0, 11])"
 ```
 
-- We have histograms for every stage with node information. Histogram as follows:
-![Histogram](src/planner/outputs/graphs/node_distribution/q4/q4_stage3_histogram.png)
+- We have charts for every stage with node information. Histogram as follows:
+![Histogram](src/planner/outputs/bar_charts/node_distribution/q4/q4_stage3_histogram.png)
 
 - Egg altered to provide more info
-- Histogram for number of merges per stage:
-![Histogram](src/planner/outputs/graphs/egg-merges/q9/q9_merge_counts.png)
+- Chart for number of merges per stage:
+![Histogram](src/planner/outputs/bar_charts/egg-merges/q9/q9_merge_counts.png)
 ----------------------------------
 
 
