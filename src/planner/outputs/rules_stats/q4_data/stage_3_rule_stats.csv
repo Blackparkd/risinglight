@@ -7,11 +7,11 @@ Stage,Rule_Name,Total_Applications,Rank
 3,and-true,5,6
 3,filter-merge,4,7
 3,pushdown-proj-filter,3,8
-3,pushdown-join-condition-right,2,9
+3,pushdown-join-condition-left,2,9
 3,hash-join-on-one-eq-rev,2,10
-3,pushdown-join-condition-left,2,11
-3,pushdown-proj-order,2,12
-3,pushdown-proj-hashagg,1,13
-3,eq-comm,1,14
+3,pushdown-proj-order,2,11
+3,pushdown-join-condition-right,2,12
+3,pushdown-proj-join,1,13
+3,pushdown-proj-hashagg,1,14
 3,hash-join-on-one-eq,1,15
-3,pushdown-proj-join,1,16
+3,eq-comm,1,16

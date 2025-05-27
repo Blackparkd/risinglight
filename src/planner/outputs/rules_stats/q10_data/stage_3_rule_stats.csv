@@ -14,8 +14,8 @@ Stage,Rule_Name,Total_Applications,Rank
 3,pushdown-filter-inner-join,85,13
 3,identical-proj,77,14
 3,pushdown-proj-join,76,15
-3,hash-join-on-one-eq,69,16
-3,pushdown-proj-proj,69,17
+3,pushdown-proj-proj,69,16
+3,hash-join-on-one-eq,69,17
 3,pushdown-join-condition-left,37,18
 3,pushdown-join-condition-right-1,33,19
 3,hash-join-on-three-eq,24,20

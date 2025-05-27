@@ -1,6 +1,2 @@
 Stage,Internal_Iteration,Class_Count,Node_Count,Rule_Name,Applications
-1,0,83,83,eq-comm,1
-1,0,83,83,and-comm,2
-1,0,83,83,filter-split,2
-1,1,85,90,filter-split,2
-1,2,87,94,None,0
+1,0,13,13,None,0

@@ -8,5 +8,5 @@ Stage,Rule_Name,Total_Applications,Rank
 2,identical-proj,6,7
 2,ge-comm,3,8
 2,gt-comm,2,9
-2,mul-comm,1,10
-2,pushdown-proj-agg,1,11
+2,pushdown-proj-agg,1,10
+2,mul-comm,1,11

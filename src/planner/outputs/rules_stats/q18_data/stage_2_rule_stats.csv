@@ -1,8 +1,8 @@
 Stage,Rule_Name,Total_Applications,Rank
 2,identical-proj,13,1
 2,eq-comm,3,2
-2,pushdown-proj-join,3,3
-2,pushdown-proj-filter,3,4
+2,pushdown-proj-filter,3,3
+2,pushdown-proj-join,3,4
 2,pushdown-proj-hashagg,2,5
 2,pushdown-proj-topn,2,6
 2,pushdown-filter-proj,2,7

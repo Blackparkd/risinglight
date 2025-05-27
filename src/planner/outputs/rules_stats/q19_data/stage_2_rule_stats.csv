@@ -10,5 +10,5 @@ Stage,Rule_Name,Total_Applications,Rank
 2,filter-split,4,9
 2,or-assoc,2,10
 2,pushdown-proj-join,1,11
-2,pushdown-proj-agg,1,12
-2,mul-comm,1,13
+2,mul-comm,1,12
+2,pushdown-proj-agg,1,13
