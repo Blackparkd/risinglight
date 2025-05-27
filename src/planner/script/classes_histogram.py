@@ -23,7 +23,7 @@ def create_relational_histogram(query_folder, stage):
     input_file = f"src/planner/outputs/data_classes/{query_folder}/stage_{stage}_classes.csv"
     
     # Create output directory
-    output_dir = "src/planner/outputs/graphs/relational_ops"
+    output_dir = "src/planner/outputs/bar_charts/relational_ops"
     query_output_dir = os.path.join(output_dir, query_folder)
     if not os.path.exists(query_output_dir):
         os.makedirs(query_output_dir)
