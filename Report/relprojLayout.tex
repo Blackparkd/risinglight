@@ -543,6 +543,14 @@ For what we saw in the chapters for each query, it seems the initial expression 
 
 This provides an opportunity for improvement in this optimizer, for example, if we could have a prediction on how the optimizer would behave for a specific type of query, then the initial expression would be greatly improved, and the initial cost would decrease significantly.
 
+\section{Rule Application}   
+
+Based on the most used rules during each stage, we can see big differences between the two queries, despite the fact that the same set of rules is being applied to both.
+
+In query 6, despite the rules in stage 3 focusing on join reordering and hash join optimizations, the most applied rules are related to \textbf{filter} operations.
+This is very different from query 2, where the most applied rules in stage 3 are related to \textbf{join} operations, as expected.
+
+This is another point where we improvements could be made in this system through behaviour prediction. If it's detected that a query is going to be simple, like query 6, probably the last set of rules wouldn't need to be focusing on join operations. In some cases, maybe the optimizer could even skip this last stage altogether, since the cost decrease is not significant enough to justify the extra work. This could possibly improve the optimizer's overall performance.
 
 
 \chapter{Final Conclusions and Future Work} \label{chap:concl}
@@ -559,13 +567,18 @@ Some key findings from our analysis include:
     \item The importance of merge operations in consolidating equivalent expressions and reducing redundancy
 \end{itemize}
 
-While we believe that our project meets the requirements initially set, there is still room for future work. Potential extensions include:
+While we believe that our project meets the requirements initially set, there is still room for future work.\\ 
+Based on what we stated in the \textbf{\hyperref[chap:discussion]{discussion section}}, we can see that there are some improvements that could be made to the optimizer, such as:
 \begin{itemize}
-    \item Dynamic visualizations that show the step-by-step progression of the optimization process, for example, which nodes were affected by each rule
-    \item Interactive tools that allow users to modify queries and immediately see the impact on optimization
-    \item Deeper analysis of specific optimization techniques, such as join reordering
     \item Integration with actual execution statistics to compare estimated costs and real-world performance
+    \item Implementing a prediction mechanism to optimize the initial expression based on query characteristics
+    \item Enhancing the optimizer's ability to skip unnecessary stages for simple queries
 \end{itemize}
+
+One possible implementation for these sugested features could rely on machine learning techniques. This approach would mean the optimizer could learn from previous queries and their optimization processes, identifying patterns and behaviors that could be used to predict the best course of action for new queries, becoming more powerfull with each execution.
+
+These enhancements could even be applied to other real world systems using databases, for example, traffic control cameras in crosswalks, since some work with databases to analyse information in real time about the ammount of people passing through them. \\
+Since this information has to be processed in real time, these improvements could be crucial to ensure the system is able to process the information quickly and efficiently, without unnecessary delays or resource usage.
 
 Overall, this project has provided valuable insights into query optimization and established a foundation for further research in this area.
 
