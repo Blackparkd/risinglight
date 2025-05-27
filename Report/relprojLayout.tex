@@ -146,7 +146,7 @@ The development process was structured into five main phases:
     \item Analysis of the problem and definition of the project's goals.
     \item Insertion of strategically placed print statements into the \texttt{optimizer.rs} file to trace the execution flow.
     \item Logging and saving of relevant execution data to external csv files.
-    \item Generation of visual representations and graphs based on the collected data.
+    \item Generation of visual representations and bar charts based on the collected data.
 \end{enumerate}
 
 This structured approach provided a deeper understanding of the inner workings of the optimizer and enabled a comprehensive analysis of its behavior across different stages.
@@ -189,7 +189,9 @@ To ease the reading and comprehension of this document, in this section will be 
 \begin{itemize}
     \item \textbf{Chapter~\ref{chap:intro} -- Introduction:} Contextualization of the project and its main objectives.
     \item \textbf{Chapter~\ref{chap:analiseEspecificacao} -- Description and Specification:} Informal description of the problem, project goals, and the data collected for analysis.
+    \item \textbf{Chapter~\ref{chap:rules} -- Optimization Stages and Rule Application:} Detailed description of the optimization stages, the rules applied in each stage, and the iterative nature of the optimization process.
     \item \textbf{Chapter~\ref{chap:concDesenho} -- Visual Representation and Analysis:} In-depth analysis of the optimizer's behavior, focusing on selected queries and the impact of each optimization stage.
+    \item \textbf{Chapter~\ref{chap:discussion} -- Discussion of Results:} Discussion of the results obtained from the analysis, highlighting the differences in optimization processes and possible improvements.
     \item \textbf{Chapter~\ref{chap:concl} -- Final Conclusions and Future Work:} Final remarks about the project and suggestions for future improvements.
 \end{itemize}
 
@@ -217,7 +219,7 @@ To achieve this, we've instrumented the Risinglight query optimizer to capture d
     \item Insight into a specific optimizing technique: merge
 \end{itemize}
 
-This data is then processed and displayed through histograms to provide further insight into the optimizer.
+This data is then processed and displayed in bar charts to provide further insight into the optimizer.
 
 \section{Database Schema}
 
@@ -231,7 +233,7 @@ The Risinglight database system is designed to support the TPC-H benchmark, whic
 \end{figure}
 
 
-\chapter{Optimization Stages and Rule Application}
+\chapter{Optimization Stages and Rule Application} \label{chap:rules}
 \thispagestyle{fancy}
 The optimizer starts with the initial logical expression, which is a representation of the SQL query. This expression is then transformed through a series of stages, each applying a set of rules to optimize the query. \\
 There are three main stages, each with its own set of rules and an unknown number of iterations, in order to target specific inefficiencies and improve the overall performance of the query execution plan. 
@@ -276,37 +278,38 @@ The third stage focuses on optimizing join operations, which are often the most 
 \chapter{Visual Representation and Analysis} \label{chap:concDesenho}
 \thispagestyle{fancy}
 The goal of the optimizer is mainly to reduce the cost of the execution of certain queries, this is accomplished through a series of optimization stages that eventually lead to a more efficient database. \\
-Since our goal is to analyse this optimizer, we decided we should choose the TPC-H queries for which the cost decrease would be more significant.
+Since our goal is to analyse this optimizer, we thought it would be helpful to compare two different queries. Since we are dealing with cost-efficient optimization, we decided we should choose the ones with the most different variation in cost, which means we have to look for one query with little variation and one with a significant cost decrease.
 
-We thought it would be helpful if we could see the cost for every query and compare it, before choosing the ones to further analyse. With this in mind and making use of the \textbf{Matplotlib library} in \textbf{Python}, we built a histogram, in which is displayed the cost for every stage the optimizer goes through.
+We thought it would be helpful if we could see the cost for every query and compare it, before choosing the ones to further analyse. With this in mind and making use of the \textbf{Matplotlib library} in \textbf{Python}, we built a bar chart, in which is displayed the cost for every stage the optimizer goes through.
 
-The initial cost is omitted from this histogram, as it remains identical across all queries.
+The initial cost is omitted, as it remains identical across all queries.
 This value is defined as the maximum possible value that can be represented by a 32-bit floating point number and it is assigned using the line \textbf{\texttt{[let mut cost = f32::MAX]}}. This number has a value of approximately $3.4 \times 10^{38}$.
 
 \begin{figure}[H]
     \includegraphics[width = 1.35\textwidth, height = 0.37\textheight, keepaspectratio]{img_cost_differential/cost_reduction_all_queries.png}
-    \caption{Histogram of cost reduction}
+    \caption{Cost variation bar chart}
     \label{fig:cost1}
 \end{figure}
 
-The histogram above does a good job at providing some insight as to what queries would be more advantageous to analyse with more depth. 
+The chart above does a good job at providing some insight as to what queries would be more advantageous to analyse with more depth. 
 
 To help understand the motivations behind this analysis, the table below has more detailed information about every query: initial and decreased costs alongside the stages.
 
 \begin{figure}[H]
     \includegraphics[width = 1.45\textwidth, height = 0.40\textheight, keepaspectratio]{img_cost_differential/cost_reduction_table.png}
-    \caption{Table of cost reduction}
+    \caption{Cost variation table}
     \label{fig:tab1}
 \end{figure}
 
 Based on the images above, we come to the conclusion that some queries have a huge decrease in cost, while others barely evolve in efficiency. \\
 The query with the most decrease in cost throughout the stages is query 2, with a decrease of 2.502958e+27, and on query 6 the decrease is barelly noticeable, having only a difference of 12488.749499999998 from stage 1 to stage 3. 
 
-These are the 2 querys we will focus on in this analysis, to understand the huge difference behind these two.
+During the development of this project, we had the chance to analyse all the TPC-H queries of the \textbf{Risinglight} database system, more specifically, the expression groups and the most used rules in each stage. We started detecting a pattern in a certain type of query: in queries with a similar cost variation, the number of expressions groups and the most used rules were also similar. As we will see further into this report, in queries with higher cost decrease, one of the most used rules in the last stage would always be related to \textbf{join operations}, for example join-reordering or join-rotating. \\
+With this in mind, we thought analysing only \textbf{query 2} and \textbf{query 6} would be enough to understand the optimizer's behavior, since they are the most extreme cases in terms of cost variation and will reflect the general behaviour among the rest of the queries.
+These are the two queries we will focus on in this analysis, to understand the huge difference behind these two.
 
-We found the accentuated decrease in cost more interesting, and this section will help understand the reasons behind it. 
 
-While this analysis is only focused on the 2 queries mentioned, the remaining queries' analysis will be available on our GitHub repository - \textbf{\href{https://github.com/Blackparkd/risinglight/tree/main/src/planner/outputs/graphs}{Graphs folder}} for the reader to explore. 
+While this analysis is only focused on the 2 queries mentioned, the remaining queries' analysis will be available on our GitHub repository - \textbf{\href{https://github.com/Blackparkd/risinglight/tree/main/src/planner/outputs/bar_charts}{Charts folder}} for the reader to explore. 
 
 To understand the steps forward in this analysis, it's useful to see the SQL query that we are going to analyse, as well as the relational expression generated. \\
 Since these are quite complex, especially the expression generated, we will display them in the appendix, in the end of this report.
@@ -316,11 +319,13 @@ Since these are quite complex, especially the expression generated, we will disp
 \subsection{Relational Expression}
 
 The relational expression is a representation of the SQL query in a tree-like structure, where each node represents an operation or a relation. The expression is generated by the optimizer and serves as an intermediate representation before the final execution plan is created.
-In the appendix, in section \underline{\hyperref[subsec:query6]{\ref{subsec:query6}}}, we can see the SQL query, and the relational expression generated. 
+In the appendix, in section \underline{\hyperref[subsec:query6]{Query 6 (Appendix)}}, we can see the SQL query, and the relational expression generated. 
 
 Judging by the relational expression alone, we can see we are dealing with a simple query, which already gives the hint that the optimizer won't have a lot of work to do with this one.
 
 Nevertheless, the optimizer still manages to reduce the number of nodes from 51 in the initial expression to 31 in the final optimized form, while maintaining the semantic equivalence of the query. 
+
+When comparing the initial and final expressions, we find some reasons why the number of nodes is lower: the number of columns is brought down to only the necessary ones, in this case, four; the operations were also simplified to keep only the essential ones such as \textbf{filter}. 
 
 \subsection{Expression Groups}
 
@@ -333,10 +338,10 @@ The expression groups are a representation of the different equivalent expressio
     \label{fig:exprgroups1}
 \end{figure}
 
-The histogram above displays the number of expression groups generated at each stage of the optimization process. Within each group, there may be an unknown number of equivalent expressions. 
+The chart above displays the number of expression groups generated at each stage of the optimization process. Within each group, there may be an unknown number of equivalent expressions. 
 
-The histogram shows that the number of expression groups generated in stage 2 is significantly higher than in stage 1 and stage 3. This suggests that the optimizer is exploring a larger number of equivalent expressions in stage 2, likely due to the application of more complex rules and transformations. \\
-This is also reflected in the histogram of cost reduction (Figure \ref{fig:cost1}), where we can see that the decrease in cost is more accentuated when we move from stage 1 to stage 2.
+This bar chart shows that the number of expression groups generated in stage 2 is significantly higher than in stage 1 and stage 3. This suggests that the optimizer is exploring a larger number of equivalent expressions in stage 2, likely due to the application of more complex rules and transformations. \\
+This is also reflected in the cost variation chart (Figure \ref{fig:cost1}), where we can see that the decrease in cost is more accentuated when we move from stage 1 to stage 2.
 Stage 2 is where the optimizer applies the predicate pushdown and projection pushdown rules. 
 
 \subsection{Rule Application}
@@ -414,7 +419,7 @@ The merge operation is a critical step in the optimization process, as it allows
     \label{fig:merge1}
 \end{figure}
 
-So far, regarding query 6, we were led to believe that stage 2 is where the optimizer does most of the work. However, when we look at the histogram above,not only are they more frequent in stage 3, but we can also see the growing difference between the amount of unique nodes and equivalence classes. 
+So far, regarding query 6, we were led to believe that stage 2 is where the optimizer does most of the work. However, when we look at the figure above, not only are they more frequent in stage 3, but we can also see the growing difference between the amount of unique nodes and equivalence classes. 
 
 Each equivalence class represents a group in which all the expressions are equivalent, while each node is an unique expression, for example, the expression \texttt{"a+b"} is a possible node.\\ 
 However, \texttt{"b+a"} can also be a node, but since they represent the same operation, they can be merged into a single equivalence class. \\
@@ -426,7 +431,7 @@ This is the reason for the growing difference between the number of equivalence 
 
 So now, we believe it will be interesting to see how the optimizer behaves with a more complex query, and how it manages to reduce the number of nodes in the expression. 
 
-\subsubsection{Relational Expression}
+\subsection{Relational Expression}
 
 The stage 0 expression for query 2 proves that this query is far more complex than the previous query we analysed.
 
@@ -434,12 +439,20 @@ The expression is composed of 129 nodes, which is a significant increase compare
 
 One more reason to analyse the stage 0 expression is to understand how the optimizer starts with a very complex expression, and how it is gradually simplified throughout the stages. 
 
+If we compare the initial and final expression, it's possible to see some differences in which operations are present in the nodes. For example, the initial expression has \textbf{join} operations, while the final expression includes \textbf{hash-join} operations and specific join types, such as \textbf{inner-join} or \textbf{left-join}.
 
-As we can see in the \underline{\hyperref[subsec:query2]{appendix}}, the optimizer managed to reduce the number of nodes from 129 in the initial expression to 109 in the final optimized form, while maintaining the semantic equivalence of the query. \\ This reduction in complexity is one of the factors that contributes to the overall cost decrease. 
+In a logical plan of a database, a \textbf{join} only indicates that two tables are being combined, but it does not specify how this combination is done. \\
+In contrast, a \textbf{hash join} is a specific implementation of a join operation that uses a hash table to efficiently combine rows from two tables based on a common key. This is a more efficient way to perform joins, especially for large datasets, and it is one of the optimizations applied by the optimizer in this query. 
+
+Another important observation is the change from the general \textbf{join} operator to more specific join types like \textbf{inner-join}. This transformation reflects a crucial optimization step where the optimizer determines the most efficient type of join for each operation based on the data characteristics and query requirements. \\
+For example, if only matching rows are needed from both tables, an inner-join is more efficient than a simple join. The choice of join type directly impacts the query's execution plan and overall performance.
+
+
+As we can see in the \underline{\hyperref[subsec:query2]{Query 2 (Appendix)}}, the optimizer managed to reduce the number of nodes from 129 in the initial expression to 109 in the final optimized form, while maintaining the semantic equivalence of the query. \\ This reduction in complexity is one of the factors that contributes to the overall cost decrease.
 
 So now, a good question to ask is: \textbf{How does the optimizer manage to reduce the number of nodes?} 
 
-To help answering this question, it is helpful to analyse the histogram of the expression groups generated during the optimization process. 
+To help answering this question, it is helpful to analyse the expression groups generated during the optimization process. 
 
 \subsection{Expression Groups}
 
@@ -450,10 +463,8 @@ To help answering this question, it is helpful to analyse the histogram of the e
     \label{fig:exprgroups2}
 \end{figure}
 
-The histogram above displays the number of expression groups generated at each stage of the optimization process. Just like in query 6, there may be an unknown number of equivalent expressions inside each group. 
-
-According to the \textbf{Cost Reduction} histogram (Figure \ref{fig:cost1}), the decrease in cost is more accentuated when we move from stage 2 to stage 3. This is the stage where the optimizer applies the join reordering and hash join rules. \\
-This is also reflected in the histogram of expression groups (Figure \ref{fig:exprgroups2}), where we can see that the number of groups generated in stage 3 is significantly higher than in stage 2. \\
+According to the \textbf{Cost Variation} chart (Figure \ref{fig:cost1}), the decrease in cost is more accentuated when we move from stage 2 to stage 3. This is the stage where the optimizer applies the join reordering and hash join rules. \\
+This is also reflected in the bar chart covering the expression groups (Figure \ref{fig:exprgroups2}), where we can see that the number of groups generated in stage 3 is significantly higher than in stage 2. \\
 This implies that the optimizer is, not only exploring a larger number of equivalent expressions in stage 3, but also being able to reduce the overall cost of the query. 
 
 This is a very interesting finding, as it suggests that the optimizer is capable of finding more efficient ways to represent the same operation, even when the number of equivalent expressions increases. 
@@ -516,28 +527,44 @@ However, many of these new expressions end up being semantically equivalent to e
 
 Here we can see that the optimizer has the expected behavior: The number of merge operations greatly increases, which means that, despite the increase in the number of expression groups generated during stage 3, a large group of these are also being merged into a single representation. 
 
-This histogram also has some interesting information about the number of equivalence classes and the number of unique nodes. Just like in query 6, we can see that the number of equivalence classes is growing, while the number of unique nodes is decreasing. This is confirmation of what we mentioned before: that, before these operations, there are lot of equivalent expressions with the same semantic meaning. 
+Here we can also find some interesting information about the number of equivalence classes and the number of unique nodes. Just like in query 6, we can see that the number of equivalence classes is growing, while the number of unique nodes is decreasing. This is confirmation of what we mentioned before: that, before these operations, there are lot of equivalent expressions with the same semantic meaning. 
+
+\chapter{Discussion of Results} \label{chap:discussion}
+\thispagestyle{fancy}
+
+In this chapter, we will discuss the results obtained from the analysis of the two queries, focusing on the differences in their optimization processes and the implications of these findings.
+
+\section{Relational Expression}
+The relational expressions for both queries show a significant difference in complexity. Query 6 has a relatively simple expression with 51 nodes, while query 2 has a much more complex expression with 129 nodes.
+
+Based on the each of the relational expressions, we can conclude query 2 required more effort from the optimizer in order to improve its efficiency. However, there is something both expressions have in common: too much redundant or unnecessary nodes.
+
+For what we saw in the chapters for each query, it seems the initial expression doesn't have a specific implementation for the necessary operations, instead, it only has a more general representation of the operations, such as \textbf{join} or \textbf{filter}. Another problem is, for example in query 6, there are more columns being included in the expression than those absolutely needed.
+
+This provides an opportunity for improvement in this optimizer, for example, if we could have a prediction on how the optimizer would behave for a specific type of query, then the initial expression would be greatly improved, and the initial cost would decrease significantly.
+
 
 
 \chapter{Final Conclusions and Future Work} \label{chap:concl}
 \thispagestyle{fancy}
 This report describes our process of analyzing and visualizing the behavior of a SQL query optimizer through the instrumentation of the Risinglight database system. The project successfully achieved the objectives outlined in the introduction, providing valuable insights into the complex process of query optimization.
 
-Our visual representations have made it possible to observe patterns and behaviors that would be difficult to discern from raw data alone. The analysis of expression groups, relational operators, and cost estimates has deepened our understanding of how different queries are optimized.
+Our visual representations have made it possible to observe patterns and behaviors that would be difficult to discern from raw data alone. The analysis of expression groups and cost estimates has deepened our understanding of how different queries are optimized.
 
 Some key findings from our analysis include:
 \begin{itemize}
     \item The relationship between query complexity and the number of expression groups generated
     \item Common transformation patterns applied by the optimizer for specific query constructs
-    \item Situations where cost estimates may not accurately reflect actual execution performance
+    \item The significant impact of join reordering and hash join optimizations on higher cost queries
+    \item The importance of merge operations in consolidating equivalent expressions and reducing redundancy
 \end{itemize}
 
 While we believe that our project meets the requirements initially set, there is still room for future work. Potential extensions include:
 \begin{itemize}
-    \item Dynamic visualizations that show the step-by-step progression of the optimization process
+    \item Dynamic visualizations that show the step-by-step progression of the optimization process, for example, which nodes were affected by each rule
     \item Interactive tools that allow users to modify queries and immediately see the impact on optimization
-    \item Deeper analysis of specific optimization techniques, such as join reordering or predicate pushdown
-    \item Integration with actual execution statistics to evaluate the effectiveness of optimization decisions
+    \item Deeper analysis of specific optimization techniques, such as join reordering
+    \item Integration with actual execution statistics to compare estimated costs and real-world performance
 \end{itemize}
 
 Overall, this project has provided valuable insights into query optimization and established a foundation for further research in this area.
@@ -645,7 +672,7 @@ In order to run the project, you can make use of the \texttt{run.sh} script we d
     \item \textbf{Egg library:} \url{https://github.com/egraphs-good/egg}
     \item \textbf{Modified Risinglight GitHub Repository:} \url{https://github.com/Blackparkd/risinglight/tree/main}
     \item \textbf{Modified Egg library:} \url{https://github.com/Blackparkd/egg}
-    \item \textbf{Generated histograms folder:} \url{https://github.com/Blackparkd/risinglight/tree/main/src/planner/outputs/graphs}
+    \item \textbf{Generated charts folder:} \url{https://github.com/Blackparkd/risinglight/tree/main/src/planner/outputs/bar_charts}
     \item \textbf{Python scripts:} \url{https://github.com/Blackparkd/risinglight/tree/main/src/planner/script}
     \item \textbf{Modified optimizer.rs file:} \url{https://github.com/Blackparkd/risinglight/blob/main/src/planner/optimizer.rs}
 \end{itemize}
@@ -663,8 +690,8 @@ These concepts are essential for understanding the context of our work and the t
     \item \textbf{Cost Model:} A cost model is a mathematical representation used to estimate the resource consumption (e.g., time, memory) of different query execution plans.
     \item \textbf{Relational Algebra:} Relational algebra is a formal system for manipulating relations (tables) in a database. It provides a set of operations, such as selection, projection, and join, that can be used to express queries and transformations on relational data.
     \item \textbf{TPC-H:} TPC-H is a widely used benchmark for evaluating the performance of database systems. It consists of a set of complex SQL queries that simulate real-world data processing scenarios, allowing researchers and developers to assess the efficiency of their systems.
-    \item \textbf{Python:} Python is a high-level programming language known for its simplicity and readability. It is widely used for data analysis, visualization, and scripting tasks. In this project, Python was used to generate histograms and visualize the optimization process.
-    \item \textbf{Matplotlib:} Matplotlib is a popular Python library for creating static, animated, and interactive visualizations. It provides a wide range of plotting functions and customization options, making it suitable for generating histograms and other types of charts.
+    \item \textbf{Python:} Python is a high-level programming language known for its simplicity and readability. It is widely used for data analysis, visualization, and scripting tasks. In this project, Python was used to generate the charts present in this report and visualize the optimization process.
+    \item \textbf{Matplotlib:} Matplotlib is a popular Python library for creating static, animated, and interactive visualizations. It provides a wide range of plotting functions and customization options, making it suitable for generating bar charts.
     \item \textbf{Rust:} Rust is a systems programming language that emphasizes safety, concurrency, and performance. It is used in the Risinglight database system to implement the query optimizer and other components.
 \end{itemize}
 
